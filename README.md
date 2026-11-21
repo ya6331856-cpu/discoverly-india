@@ -21,16 +21,31 @@ Dashboard: https://supabase.com/dashboard/project/nkxnexjwbdopycvxwomn
 Never place a Supabase service-role or secret key in the browser, a `NEXT_PUBLIC_*` variable, or GitHub source.
 
 ## Implemented
-- Responsive business discovery homepage with real seeded industry filters.
-- Keyword and location search using the existing `public.search_businesses` RPC.
-- Email/password signup and login with Supabase Auth.
-- Email confirmation callback route.
+- Responsive India-wide business discovery homepage with industry and location filters.
+- Keyword/trigram search using `public.search_businesses`.
+- Email/password signup and login with Supabase Auth and email-confirmation callback.
 - Profile and customer-role creation trigger on new auth users.
 - Account page with a signed-in user's business portfolio.
-- Business registration using the `public.create_business_profile` RPC.
-- Company, profile/contact, city/state location and category relations are created in one database transaction.
-- Newly registered businesses start as private `draft` profiles and do not enter public search until reviewed and published.
-- GitHub Actions runs TypeScript, ESLint and production build checks on pushes and pull requests.
+- Business registration using `public.create_business_profile`; new companies begin as private drafts.
+- Buyer requirement form for purchase, service, partnership, distribution and other requests.
+- Automatic matching against published businesses by industry and public city/state location.
+- Buyer workspace to review matches and incoming quotations.
+- Business opportunity inbox for matching leads and quotation submission.
+- Quotation acceptance/rejection by the buyer; only one quote can be accepted per lead.
+- RLS rules that keep requirements visible to the buyer and matched company members only.
+- Company owners can submit a draft for review but cannot self-publish; publication is reserved for platform reviewers.
+- Public location view uses caller RLS and exposes only city-level location fields.
+- Private schema contains narrowly scoped security-definer helpers; no security-advisor lints currently reported.
+- GitHub Actions validates TypeScript, ESLint and production build on pushes and pull requests.
 
-## Current limits
-This is an implementation foundation, not a public production launch. Email redirect URLs must be configured for the deployed domain. No real signup/confirmation has been completed with a test mailbox yet. Secure logo/document storage, business verification workflow, requirement posting, quotations, moderation UI, and public company detail pages still need implementation and testing.
+## Main routes
+- `/` — business discovery
+- `/auth` — signup and login
+- `/account` — account and business portfolio
+- `/business/register` — create a business draft
+- `/requirements/new` — post a buyer requirement
+- `/requirements` — buyer matches and quotations
+- `/opportunities` — matched opportunities for business members
+
+## Current limits / launch checklist
+This is an implementation foundation, not a public production launch. Configure the deployed domain in Supabase Auth URL Configuration and set the two public Supabase environment variables in the hosting provider. No real mailbox signup, company onboarding, buyer-to-business match, or quote acceptance has been end-to-end tested with production test accounts yet. Secure logo/document storage, company edit screens, business verification submission/review UI, admin moderation UI, notifications, anti-spam/rate limits, public company detail pages, and live deployment still need work.
