@@ -379,17 +379,17 @@ class BusinessTile extends StatelessWidget {
     final desc = item['description'] ?? 'Discover this business and its services.';
     final city = item['city']?.toString(), state = item['state']?.toString();
     final initials = title.toString().trim().isEmpty ? 'B' : title.toString().trim()[0].toUpperCase();
-    return Container(margin: const EdgeInsets.only(bottom: 5), padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 9), decoration: const BoxDecoration(color: Colors.white, border: Border(bottom: BorderSide(color: Color(0xFFE7EDE8)))), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Container(width: 38, height: 38, alignment: Alignment.center, decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF123F32), Color(0xFF087E63)]), borderRadius: BorderRadius.circular(14)), child: Text(initials, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w900))),
+    return Container(margin: const EdgeInsets.only(bottom: 8), padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12), decoration: const BoxDecoration(color: Colors.white, border: Border(bottom: BorderSide(color: Color(0xFFE7EDE8)))), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Container(width: 46, height: 46, alignment: Alignment.center, decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF123F32), Color(0xFF087E63)]), borderRadius: BorderRadius.circular(14)), child: Text(initials, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900))),
       const SizedBox(width: 11), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          Expanded(child: Text('$title', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: ink))),
-          const SizedBox(width: 6), Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3), decoration: BoxDecoration(color: const Color(0xFFF1F4F1), borderRadius: BorderRadius.circular(5)), child: const Text('BUSINESS', style: TextStyle(fontSize: 7, letterSpacing: .5, color: Color(0xFF65736B), fontWeight: FontWeight.w900))),
+          Expanded(child: Text('$title', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: ink))),
+          const SizedBox(width: 6), Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3), decoration: BoxDecoration(color: const Color(0xFFF1F4F1), borderRadius: BorderRadius.circular(5)), child: const Text('BUSINESS', style: TextStyle(fontSize: 8, letterSpacing: .5, color: Color(0xFF65736B), fontWeight: FontWeight.w900))),
         ]),
-        const SizedBox(height: 4), Text('$desc', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 9, height: 1.25, color: Color(0xFF718078))),
+        const SizedBox(height: 4), Text('$desc', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, height: 1.35, color: Color(0xFF718078))),
         if ((city ?? '').isNotEmpty || (state ?? '').isNotEmpty) Padding(padding: const EdgeInsets.only(top: 7), child: Row(children: [
           const Icon(Icons.location_on_outlined, size: 12, color: green), const SizedBox(width: 3),
-          Expanded(child: Text([city, state].where((v) => v != null && v.isNotEmpty).join(', '), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 9, color: green, fontWeight: FontWeight.w800))),
+          Expanded(child: Text([city, state].where((v) => v != null && v.isNotEmpty).join(', '), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, color: green, fontWeight: FontWeight.w800))),
         ])),
       ])),
       const SizedBox(width: 3), const Icon(Icons.north_east_rounded, size: 15, color: Color(0xFF9AA69F)),
