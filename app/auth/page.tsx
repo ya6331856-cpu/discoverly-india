@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import {useEffect,useState} from "react";
 import {useRouter} from "next/navigation";
 import {createClient} from "@/lib/supabase/client";
@@ -45,9 +46,9 @@ export default function AuthPage(){
  }
 
  return <main className="authShell">
-  <a className="authBack" href="/">← Back to Discoverly</a>
+  <Link className="authBack" href="/">← Back to Discoverly</Link>
   <section className="authCard">
-   <a className="brand authBrand" href="/">D<span>.</span> &nbsp; DISCOVERLY</a>
+   <Link className="brand authBrand" href="/">D<span>.</span> &nbsp; DISCOVERLY</Link>
    <small className="eyebrow">{mode==="signup"?"JOIN THE BUSINESS NETWORK":"WELCOME BACK"}</small>
    <h1>{mode==="signup"?"Create your account.":"Good to see you."}</h1>
    <p className="authIntro">{mode==="signup"?"One account to discover businesses or build your own business presence.":"Sign in to manage your profile and business connections."}</p>
