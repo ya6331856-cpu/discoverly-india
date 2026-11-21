@@ -38,16 +38,16 @@ jobs:
           settings = sdk_root / "packages/flutter_tools/gradle/settings.gradle.kts"
           current = settings.read_text()
           if "pluginManagement" not in current:
-              current = """pluginManagement {
-              repositories {
-                  google()
-                  mavenCentral()
-                  gradlePluginPortal()
-              }
-          }
-
-          """ + current
-              settings.write_text(current)
+              header = (
+                  "pluginManagement {\n"
+                  "    repositories {\n"
+                  "        google()\n"
+                  "        mavenCentral()\n"
+                  "        gradlePluginPortal()\n"
+                  "    }\n"
+                  "}\n\n"
+              )
+              settings.write_text(header + current)
           print(f"Verified plugin repositories in {settings}")
           PY
       - name: Generate Android platform files
