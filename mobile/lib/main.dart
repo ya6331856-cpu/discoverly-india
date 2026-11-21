@@ -169,5 +169,5 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   List<dynamic> rows = []; bool loading = true;
   @override void initState() { super.initState(); load(); }
   Future<void> load() async { try { final r = await supabase.from('notifications').select('id,title,body,created_at,read_at').order('created_at', ascending: false).limit(50); if (mounted) setState(() => rows = r); } catch (_) {} if (mounted) setState(() => loading = false); }
-  @override Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text('Notifications')), body: loading ? const Center(child: CircularProgressIndicator()) : rows.isEmpty ? const Center(child: Text('No notifications yet')) : ListView(children: rows.map((r) => ListTile(leading: const Icon(Icons.notifications_active_outlined, color: green), title: Text(r['title'] ?? ''), subtitle: Text(r['body'] ?? '')).toList()));
+  @override Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text('Notifications')), body: loading ? const Center(child: CircularProgressIndicator()) : rows.isEmpty ? const Center(child: Text('No notifications yet')) : ListView(children: rows.map((r) => ListTile(leading: const Icon(Icons.notifications_active_outlined, color: green), title: Text(r['title'] ?? ''), subtitle: Text(r['body'] ?? ''))).toList());
 }
