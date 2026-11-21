@@ -29,6 +29,18 @@ jobs:
           cache: true
       - name: Generate Android platform files
         run: flutter create --platforms=android --org=in.discoverly .
+      - name: Ensure Android internet permission
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('android/app/src/main/AndroidManifest.xml')
+          s = p.read_text()
+          permission = '<uses-permission android:name="android.permission.INTERNET"/>'
+          if permission not in s:
+              s = s.replace('<application', permission + '\n    <application', 1)
+              p.write_text(s)
+          print('INTERNET permission verified in', p)
+          PY
       - name: Remove generated placeholder test
         run: rm -f test/widget_test.dart
       - name: Install packages
