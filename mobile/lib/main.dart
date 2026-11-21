@@ -403,8 +403,14 @@ class RequirementsScreen extends StatefulWidget {
 }
 class _RequirementsScreenState extends State<RequirementsScreen> {
   List<dynamic> rows = [];
+  List<Map<String, dynamic>> categories = [];
   bool loading = true;
   Future<void> load() async {
+    try {
+      final categoryRows = await supabase.from('categories').select('id,name')
+        .eq('category_type', 'industry').eq('is_active', true).order('name');
+      if (mounted) setState(() => categories = List<Map<String, dynamic>>.from(categoryRows));
+    } catch (_) {}
     try {
       final r = await supabase.from('requirements').select('id,title,description,city,state,status,created_at').eq('buyer_user_id', supabase.auth.currentUser!.id).order('created_at', ascending: false);
       if (mounted) setState(() => rows = r);
@@ -414,6 +420,7 @@ class _RequirementsScreenState extends State<RequirementsScreen> {
   @override void initState() { super.initState(); load(); }
   Future<void> add() async {
     final title = TextEditingController(), desc = TextEditingController(), city = TextEditingController(), state = TextEditingController();
+    String? selectedCategory = categories.isNotEmpty ? categories.first['id'].toString() : null;
     var sending = false;
     final ok = await showModalBottomSheet<bool>(
       context: context, isScrollControlled: true, useSafeArea: true, showDragHandle: true,
@@ -427,7 +434,18 @@ class _RequirementsScreenState extends State<RequirementsScreen> {
           const SizedBox(height: 20),
           TextField(controller: title, textCapitalization: TextCapitalization.sentences, decoration: const InputDecoration(labelText: 'What do you need?', prefixIcon: Icon(Icons.lightbulb_outline_rounded))),
           const SizedBox(height: 12),
-          TextField(controller: desc, maxLines: 3, textCapitalization: TextCapitalization.sentences, decoration: const InputDecoration(labelText: 'Describe your requirement', alignLabelWithHint: true)),
+          TextField(controller: desc, maxLines: 3, maxLength: 4000, textCapitalization: TextCapitalization.sentences, decoration: const InputDecoration(labelText: 'Describe your requirement (20–4000 characters)', alignLabelWithHint: true)),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<String>(
+            initialValue: selectedCategory,
+            isExpanded: true,
+            decoration: const InputDecoration(labelText: 'Industry category', prefixIcon: Icon(Icons.category_outlined)),
+            items: categories.map((c) => DropdownMenuItem<String>(
+              value: c['id'].toString(),
+              child: Text(c['name'].toString(), overflow: TextOverflow.ellipsis),
+            )).toList(),
+            onChanged: (value) => refresh(() => selectedCategory = value),
+          ),
           const SizedBox(height: 12),
           Row(children: [
             Expanded(child: TextField(controller: city, decoration: const InputDecoration(labelText: 'City', prefixIcon: Icon(Icons.location_city_rounded)))),
@@ -435,12 +453,23 @@ class _RequirementsScreenState extends State<RequirementsScreen> {
           ]),
           const SizedBox(height: 18),
           FilledButton(onPressed: sending ? null : () async {
-            if (title.text.trim().isEmpty) { ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('Please enter what you need.'))); return; }
+            if (title.text.trim().length < 5 || title.text.trim().length > 140) {
+              ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('Title must be between 5 and 140 characters.')));
+              return;
+            }
+            if (desc.text.trim().length < 20 || desc.text.trim().length > 4000) {
+              ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('Add at least 20 characters describing your requirement.')));
+              return;
+            }
+            if (selectedCategory == null) {
+              ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('Please choose an industry category.')));
+              return;
+            }
             refresh(() => sending = true);
             try {
               await supabase.rpc('create_requirement_and_match', params: {
                 'p_title': title.text.trim(), 'p_description': desc.text.trim(), 'p_requirement_type': 'other',
-                'p_category_id': null, 'p_city': city.text.trim().isEmpty ? null : city.text.trim(),
+                'p_category_id': selectedCategory, 'p_city': city.text.trim().isEmpty ? null : city.text.trim(),
                 'p_state': state.text.trim().isEmpty ? null : state.text.trim(),
               });
               if (ctx.mounted) Navigator.pop(ctx, true);
