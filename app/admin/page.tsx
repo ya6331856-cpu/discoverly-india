@@ -36,12 +36,12 @@ export default function AdminPage(){
     const companyRows=(co.data||[]) as Company[];const verRows=(ve.data||[]) as Verification[];
     const reviewRows=(re.data||[]) as Review[];const reportRows=(cr.data||[]) as Report[];
     const ids=Array.from(new Set([...companyRows.map(x=>x.id),...verRows.map(x=>x.company_id),...reviewRows.map(x=>x.company_id)]));
-    let names:Record<string,string>={};
+    const names:Record<string,string>={};
     if(ids.length){const {data}=await sb.from("companies").select("id,display_name").in("id",ids);for(const row of data||[])names[row.id]=row.display_name;}
     setCompanies(companyRows);setVerifications(verRows);setReviews(reviewRows);setReports(reportRows);setCompanyNames(names);
     setLoading(false);
   }
-  useEffect(()=>{void load();},[]);
+  useEffect(()=>{void Promise.resolve().then(()=>load());},[]);
 
   async function changeCompany(id:string,status:"published"|"rejected"){
     const sb=createClient();if(!sb)return;setBusyId(id);setError("");setNotice("");
