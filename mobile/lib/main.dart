@@ -216,25 +216,37 @@ class _RequirementsScreenState extends State<RequirementsScreen> {
   }
   @override
   Widget build(BuildContext context) {
-    final children = rows.map((r) {
-      return Card(
-        child: ListTile(
-          title: Text(r['title'] ?? ''),
-          subtitle: Text('${r['city'] ?? ''} ${r['state'] ?? ''} • ${r['status'] ?? ''}'),
-        ),
-      );
-    }).toList();
+    final children = rows.map((r) => Container(
+      margin: const EdgeInsets.only(bottom: 11), padding: const EdgeInsets.all(17),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFFE5ECE7))),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [Expanded(child: Text(r['title'] ?? '', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: ink))), Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), decoration: BoxDecoration(color: const Color(0xFFE5F2EB), borderRadius: BorderRadius.circular(30)), child: Text((r['status'] ?? 'open').toString().toUpperCase(), style: const TextStyle(color: green, fontSize: 10, fontWeight: FontWeight.w900)))]),
+        const SizedBox(height: 10),
+        Text(r['description'] ?? 'Requirement details', maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, color: Color(0xFF718078), height: 1.4)),
+        const SizedBox(height: 12),
+        Row(children: [const Icon(Icons.location_on_outlined, size: 16, color: green), const SizedBox(width: 4), Text('${r['city'] ?? ''} ${r['state'] ?? ''}', style: const TextStyle(fontSize: 12, color: green, fontWeight: FontWeight.w700))]),
+      ]),
+    )).toList();
     return Scaffold(
       backgroundColor: Colors.transparent,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: add, backgroundColor: green, foregroundColor: Colors.white,
-        icon: const Icon(Icons.add), label: const Text('Post requirement'),
-      ),
-      body: loading
-          ? const Center(child: CircularProgressIndicator())
-          : rows.isEmpty
-              ? const Center(child: Text('Aapki requirements yahan dikhenge.'))
-              : ListView(padding: const EdgeInsets.all(16), children: children),
+      floatingActionButton: FloatingActionButton.extended(onPressed: add, backgroundColor: green, foregroundColor: Colors.white, icon: const Icon(Icons.add_rounded), label: const Text('Post requirement', style: TextStyle(fontWeight: FontWeight.w800))),
+      body: loading ? const Center(child: CircularProgressIndicator(color: green))
+          : rows.isEmpty ? ListView(padding: const EdgeInsets.all(20), children: const [
+              SizedBox(height: 14),
+              Text('YOUR REQUESTS', style: TextStyle(fontSize: 11, color: green, fontWeight: FontWeight.w900, letterSpacing: 1.3)),
+              SizedBox(height: 8), Text('Make it happen.', style: TextStyle(fontSize: 29, fontWeight: FontWeight.w900, color: ink)),
+              SizedBox(height: 7), Text('Tell businesses what you need and let the right providers find you.', style: TextStyle(fontSize: 15, color: Color(0xFF718078), height: 1.4)),
+              SizedBox(height: 55),
+              Icon(Icons.assignment_add, size: 58, color: green),
+              SizedBox(height: 14), Center(child: Text('No requests yet', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900, color: ink))),
+              SizedBox(height: 7), Center(child: Text('Post your first requirement to start receiving relevant business matches.', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF718078), height: 1.5))),
+            ])
+          : ListView(padding: const EdgeInsets.fromLTRB(18, 14, 18, 100), children: [
+              const Text('YOUR REQUESTS', style: TextStyle(fontSize: 11, color: green, fontWeight: FontWeight.w900, letterSpacing: 1.3)),
+              const SizedBox(height: 8), const Text('Your requirements', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: ink)),
+              const SizedBox(height: 6), const Text('Keep track of what you have requested.', style: TextStyle(fontSize: 14, color: Color(0xFF718078))),
+              const SizedBox(height: 20), ...children,
+            ]),
     );
   }
 }
@@ -244,7 +256,29 @@ class _OpportunitiesScreenState extends State<OpportunitiesScreen> {
   List<dynamic> rows = []; bool loading = true;
   Future<void> load() async { try { final r = await supabase.from('leads').select('id,subject,message,status,created_at,companies(display_name)').order('created_at', ascending: false); if (mounted) setState(() => rows = r); } catch (_) {} if (mounted) setState(() => loading = false); }
   @override void initState() { super.initState(); load(); }
-  @override Widget build(BuildContext context) => loading ? const Center(child: CircularProgressIndicator()) : rows.isEmpty ? const Center(child: Text('Matching opportunities yahan aayengi.')) : ListView(padding: const EdgeInsets.all(16), children: rows.map((r) => Card(child: ListTile(leading: const Icon(Icons.work_outline, color: green), title: Text(r['subject'] ?? 'Opportunity'), subtitle: Text('${r['message'] ?? ''}\nStatus: ${r['status'] ?? ''}')))).toList());
+  @override Widget build(BuildContext context) => loading
+    ? const Center(child: CircularProgressIndicator(color: green))
+    : rows.isEmpty
+      ? ListView(padding: const EdgeInsets.all(20), children: const [
+          SizedBox(height: 14),
+          Text('OPPORTUNITY DESK', style: TextStyle(fontSize: 11, color: green, fontWeight: FontWeight.w900, letterSpacing: 1.3)),
+          SizedBox(height: 8), Text('Your next big lead.', style: TextStyle(fontSize: 29, fontWeight: FontWeight.w900, color: ink)),
+          SizedBox(height: 7), Text('Relevant business opportunities will appear here.', style: TextStyle(fontSize: 15, color: Color(0xFF718078))),
+          SizedBox(height: 60), Icon(Icons.work_outline_rounded, size: 58, color: green),
+          SizedBox(height: 14), Center(child: Text('No opportunities yet', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900, color: ink))),
+          SizedBox(height: 7), Center(child: Text('Matching opportunities will appear here as businesses and customers connect.', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF718078), height: 1.5))),
+        ])
+      : ListView(padding: const EdgeInsets.all(18), children: [
+          const Text('OPPORTUNITY DESK', style: TextStyle(fontSize: 11, color: green, fontWeight: FontWeight.w900, letterSpacing: 1.3)),
+          const SizedBox(height: 8), const Text('Explore leads', style: TextStyle(fontSize: 29, fontWeight: FontWeight.w900, color: ink)),
+          const SizedBox(height: 6), const Text('Stay close to new business opportunities.', style: TextStyle(fontSize: 14, color: Color(0xFF718078))),
+          const SizedBox(height: 20),
+          ...rows.map((r) => Container(margin: const EdgeInsets.only(bottom: 12), padding: const EdgeInsets.all(17), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFFE5ECE7))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [Container(width: 43, height: 43, decoration: BoxDecoration(color: const Color(0xFFE5F2EB), borderRadius: BorderRadius.circular(14)), child: const Icon(Icons.bolt_rounded, color: green, size: 24)), const SizedBox(width: 12), Expanded(child: Text(r['subject'] ?? 'Opportunity', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: ink))), Text((r['status'] ?? 'NEW').toString().toUpperCase(), style: const TextStyle(fontSize: 10, color: green, fontWeight: FontWeight.w900))]),
+            const SizedBox(height: 12), Text(r['message'] ?? '', style: const TextStyle(fontSize: 14, color: Color(0xFF718078), height: 1.45)),
+            const SizedBox(height: 12), const Divider(color: Color(0xFFE5ECE7)), const Row(children: [Icon(Icons.auto_awesome_outlined, size: 16, color: gold), SizedBox(width: 6), Text('DISCOVERLY opportunity', style: TextStyle(fontSize: 12, color: Color(0xFF718078), fontWeight: FontWeight.w700))]),
+          ]))),
+        ]);
 }
 
 class ProfileScreen extends StatelessWidget {
