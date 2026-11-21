@@ -596,6 +596,110 @@ class _StatusPill extends StatelessWidget {
   }
 }
 
+class BusinessOnboardingScreen extends StatefulWidget {
+  const BusinessOnboardingScreen({super.key});
+  @override State<BusinessOnboardingScreen> createState() => _BusinessOnboardingScreenState();
+}
+class _BusinessOnboardingScreenState extends State<BusinessOnboardingScreen> {
+  final legal = TextEditingController(), display = TextEditingController(), description = TextEditingController();
+  final city = TextEditingController(), state = TextEditingController(), phone = TextEditingController(), website = TextEditingController();
+  List<Map<String, dynamic>> categories = [];
+  String? categoryId;
+  bool loading = true, saving = false;
+  String? error, notice;
+
+  @override void initState() { super.initState(); loadCategories(); }
+  @override void dispose() {
+    legal.dispose(); display.dispose(); description.dispose(); city.dispose(); state.dispose(); phone.dispose(); website.dispose(); super.dispose();
+  }
+  Future<void> loadCategories() async {
+    try {
+      final data = await supabase.from('categories').select('id,name').eq('category_type', 'industry').eq('is_active', true).order('sort_order');
+      if (mounted) setState(() { categories = List<Map<String, dynamic>>.from(data); loading = false; });
+    } catch (_) {
+      if (mounted) setState(() { loading = false; error = 'Could not load business categories. Please retry.'; });
+    }
+  }
+  Future<void> submit() async {
+    if (legal.text.trim().isEmpty || display.text.trim().isEmpty || city.text.trim().isEmpty || state.text.trim().isEmpty || categoryId == null) {
+      setState(() => error = 'Complete the required fields: legal name, public name, category, city and state.');
+      return;
+    }
+    final user = supabase.auth.currentUser;
+    if (user == null) { setState(() => error = 'Please sign in again to register your business.'); return; }
+    setState(() { saving = true; error = null; notice = null; });
+    try {
+      final slugBase = display.text.trim().toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-').replaceAll(RegExp(r'^-|-$'), '');
+      final slug = (slugBase.isEmpty ? 'business' : slugBase) + '-' + DateTime.now().microsecondsSinceEpoch.toString();
+      final company = await supabase.from('companies').insert({
+        'legal_name': legal.text.trim(), 'display_name': display.text.trim(), 'slug': slug,
+        'entity_type': 'business', 'description': description.text.trim().isEmpty ? null : description.text.trim(),
+        'website_url': website.text.trim().isEmpty ? null : website.text.trim(),
+        'created_by': user.id, 'status': 'draft',
+      }).select('id').single();
+      final companyId = company['id'];
+      await supabase.from('company_categories').insert({'company_id': companyId, 'category_id': categoryId, 'is_primary': true});
+      await supabase.from('company_profiles').insert({
+        'company_id': companyId, 'public_email': user.email,
+        'public_phone': phone.text.trim().isEmpty ? null : phone.text.trim(),
+        'tagline': description.text.trim().isEmpty ? null : description.text.trim(),
+        'profile_completeness': 25,
+      });
+      await supabase.from('company_locations').insert({
+        'company_id': companyId, 'label': 'Head office', 'country_code': 'IN',
+        'city': city.text.trim(), 'state': state.text.trim(), 'is_head_office': true, 'is_public': true,
+      });
+      if (mounted) {
+        setState(() { saving = false; notice = 'Business profile saved as a draft. Complete verification before it can appear publicly.'; });
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Business draft created successfully.')));
+      }
+    } catch (e) {
+      if (mounted) setState(() { saving = false; error = 'We could not finish registration. If a draft was created, contact support before submitting again.'; });
+    }
+  }
+  @override Widget build(BuildContext context) => Scaffold(
+    backgroundColor: canvas,
+    appBar: AppBar(title: const Text('Register your business')),
+    body: loading ? const Center(child: CircularProgressIndicator(color: green))
+      : ListView(padding: const EdgeInsets.fromLTRB(18, 10, 18, 30), children: [
+        Container(padding: const EdgeInsets.all(17), decoration: BoxDecoration(color: const Color(0xFF0D2A21), borderRadius: BorderRadius.circular(20)), child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('JOIN THE DISCOVERLY NETWORK', style: TextStyle(fontSize: 9, color: Color(0xFFE7C987), letterSpacing: 1, fontWeight: FontWeight.w900)),
+          SizedBox(height: 9), Text('Put your business on the map.', style: TextStyle(fontSize: 22, height: 1.1, color: Colors.white, fontWeight: FontWeight.w900)),
+          SizedBox(height: 6), Text('Create a business draft. Your listing stays private until it is reviewed and published.', style: TextStyle(fontSize: 12, height: 1.4, color: Color(0xFFD1E2D9))),
+        ])),
+        const SizedBox(height: 20),
+        const Text('BUSINESS IDENTITY', style: TextStyle(fontSize: 10, color: green, letterSpacing: 1, fontWeight: FontWeight.w900)),
+        const SizedBox(height: 10),
+        TextField(controller: legal, textCapitalization: TextCapitalization.words, decoration: const InputDecoration(labelText: 'Registered / legal business name *')),
+        const SizedBox(height: 11),
+        TextField(controller: display, textCapitalization: TextCapitalization.words, decoration: const InputDecoration(labelText: 'Public business name *')),
+        const SizedBox(height: 11),
+        DropdownButtonFormField<String>(value: categoryId, isExpanded: true, decoration: const InputDecoration(labelText: 'Industry category *'),
+          items: categories.map((c) => DropdownMenuItem<String>(value: c['id'].toString(), child: Text(c['name'].toString(), overflow: TextOverflow.ellipsis))).toList(),
+          onChanged: (v) => setState(() => categoryId = v)),
+        const SizedBox(height: 11),
+        TextField(controller: description, maxLines: 3, textCapitalization: TextCapitalization.sentences, decoration: const InputDecoration(labelText: 'Business description', alignLabelWithHint: true)),
+        const SizedBox(height: 20),
+        const Text('LOCATION & CONTACT', style: TextStyle(fontSize: 10, color: green, letterSpacing: 1, fontWeight: FontWeight.w900)),
+        const SizedBox(height: 10),
+        Row(children: [
+          Expanded(child: TextField(controller: city, textCapitalization: TextCapitalization.words, decoration: const InputDecoration(labelText: 'City *'))),
+          const SizedBox(width: 10), Expanded(child: TextField(controller: state, textCapitalization: TextCapitalization.words, decoration: const InputDecoration(labelText: 'State *'))),
+        ]),
+        const SizedBox(height: 11),
+        TextField(controller: phone, keyboardType: TextInputType.phone, decoration: const InputDecoration(labelText: 'Public contact phone', prefixIcon: Icon(Icons.phone_outlined))),
+        const SizedBox(height: 11),
+        TextField(controller: website, keyboardType: TextInputType.url, decoration: const InputDecoration(labelText: 'Website (optional)', prefixIcon: Icon(Icons.language_rounded))),
+        if (error != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(error!, style: const TextStyle(color: Color(0xFFB33A3A), fontSize: 12))),
+        if (notice != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(notice!, style: const TextStyle(color: green, fontSize: 12))),
+        const SizedBox(height: 17),
+        FilledButton(onPressed: saving ? null : submit, child: saving ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Save business draft')),
+        const SizedBox(height: 9),
+        const Text('Your business will not be publicly searchable until it passes the platform review process.', textAlign: TextAlign.center, style: TextStyle(fontSize: 10, color: Color(0xFF718078), height: 1.4)),
+      ]),
+  );
+}
+
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
   @override Widget build(BuildContext context) {
@@ -627,7 +731,7 @@ class ProfileScreen extends StatelessWidget {
       const SizedBox(height: 8),
       _ProfileTile(icon: Icons.notifications_none_rounded, title: 'Notifications', subtitle: 'Account updates and activity', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()))),
       const SizedBox(height: 8),
-      _ProfileTile(icon: Icons.business_center_outlined, title: 'Business onboarding', subtitle: 'Register a business and manage services', onTap: () => showDialog(context: context, builder: (_) => AlertDialog(title: const Text('Business onboarding'), content: const Text('Business registration and company profile management are still being integrated.'), actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close'))]))),
+      _ProfileTile(icon: Icons.business_center_outlined, title: 'Business onboarding', subtitle: 'Register a business and manage services', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BusinessOnboardingScreen()))),
       const SizedBox(height: 8),
       _ProfileTile(icon: Icons.shield_outlined, title: 'Privacy & security', subtitle: 'Authentication and account protection', onTap: () => showDialog(context: context, builder: (_) => AlertDialog(title: const Text('Account security'), content: Text('Signed in as ' + (user?.email ?? 'your account') + '. Authentication is managed securely by Supabase.'), actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close'))]))),
       const SizedBox(height: 20),
