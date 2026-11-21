@@ -248,32 +248,12 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   @override Widget build(BuildContext context) => RefreshIndicator(
     onRefresh: find, color: green,
     child: ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 26), children: [
-      Row(children: [
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('DISCOVER ACROSS INDIA', style: TextStyle(fontSize: 9, letterSpacing: 1.25, color: green, fontWeight: FontWeight.w900)),
-          const SizedBox(height: 3),
-          const Text('Find your next connection', style: TextStyle(fontSize: 19, color: ink, fontWeight: FontWeight.w900, letterSpacing: -.35)),
-        ])),
-        Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7), decoration: BoxDecoration(color: const Color(0xFFE8F1EB), borderRadius: BorderRadius.circular(30)), child: const Row(children: [
-          Icon(Icons.public_rounded, color: green, size: 14), SizedBox(width: 5),
-          Text('India', style: TextStyle(fontSize: 11, color: green, fontWeight: FontWeight.w800)),
-        ])),
-      ]),
-      const SizedBox(height: 13),
-      Container(
-        height: 116, clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF0B211C), Color(0xFF0D4938), Color(0xFF087E63)]), borderRadius: BorderRadius.circular(18)),
-        child: Stack(children: [
-          Positioned(right: -24, top: -53, child: Container(width: 195, height: 195, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.white.withValues(alpha: .10), width: 22)))),
-          Positioned(right: 22, top: 22, child: Container(width: 98, height: 98, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: const Color(0x66E4C887), width: 1.2)))),
-          Positioned(right: 53, top: 53, child: Container(width: 36, height: 36, decoration: const BoxDecoration(shape: BoxShape.circle, gradient: RadialGradient(colors: [Color(0xFFE8CB8D), Color(0x00E8CB8D)])))),
-          Positioned(left: 17, top: 16, child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5), decoration: BoxDecoration(color: Colors.white.withValues(alpha: .12), borderRadius: BorderRadius.circular(20)), child: const Text('THE NETWORK FOR WHAT’S NEXT', style: TextStyle(color: Color(0xFFDDEDE5), fontSize: 8, fontWeight: FontWeight.w900, letterSpacing: .8)))),
-          const Positioned(left: 17, top: 51, child: Text('Discover. Connect.\nMove forward.', style: TextStyle(color: Colors.white, fontSize: 19, height: 1.12, fontWeight: FontWeight.w900, letterSpacing: -.5))),
-          const Positioned(left: 18, bottom: 16, child: Row(children: [
-            Icon(Icons.bolt_rounded, color: Color(0xFFE7C987), size: 15), SizedBox(width: 4),
-            Text('Businesses  •  Services  •  Opportunities', style: TextStyle(color: Color(0xFFD3E6DD), fontSize: 9, fontWeight: FontWeight.w700)),
-          ])),
-        ]),
+      _DiscoveryCommandCenter(
+        resultCount: results.length,
+        onExplore: () {
+          FocusScope.of(context).requestFocus(FocusNode());
+          find();
+        },
       ),
       const SizedBox(height: 13),
       Container(padding: const EdgeInsets.fromLTRB(13, 7, 7, 7), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(17), border: Border.all(color: const Color(0xFFE2EAE4)), boxShadow: const [BoxShadow(color: Color(0x080B2920), blurRadius: 14, offset: Offset(0, 4))]), child: Row(children: [
@@ -325,6 +305,66 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     ]),
   );
 }
+class _DiscoveryCommandCenter extends StatelessWidget {
+  final int resultCount;
+  final VoidCallback onExplore;
+  const _DiscoveryCommandCenter({required this.resultCount, required this.onExplore});
+
+  @override
+  Widget build(BuildContext context) => Container(
+    height: 204,
+    clipBehavior: Clip.antiAlias,
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(23),
+      gradient: const LinearGradient(
+        begin: Alignment.topLeft, end: Alignment.bottomRight,
+        colors: [Color(0xFF071B16), Color(0xFF0B392B), Color(0xFF12634A)],
+      ),
+      boxShadow: const [BoxShadow(color: Color(0x240B392B), blurRadius: 24, offset: Offset(0, 11))],
+    ),
+    child: Stack(children: [
+      Positioned(right: -65, top: -90, child: Container(
+        width: 270, height: 270,
+        decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: const Color(0x20E9C982), width: 1)),
+      )),
+      Positioned(right: -24, top: -48, child: Container(
+        width: 190, height: 190,
+        decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: const Color(0x35E9C982), width: 1)),
+      )),
+      Positioned(right: 26, top: 32, child: Container(
+        width: 88, height: 88,
+        decoration: BoxDecoration(shape: BoxShape.circle, color: const Color(0x14E9C982), border: Border.all(color: const Color(0x70E9C982), width: 1)),
+        child: const Icon(Icons.explore_rounded, color: Color(0xFFE9C982), size: 39),
+      )),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(19, 17, 18, 15),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Container(width: 7, height: 7, decoration: const BoxDecoration(color: Color(0xFFE9C982), shape: BoxShape.circle)),
+            const SizedBox(width: 7),
+            const Text('INDIA • ONE DISCOVERY NETWORK', style: TextStyle(color: Color(0xFFD2E5DA), fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 1.05)),
+            const Spacer(),
+            const Icon(Icons.north_east_rounded, color: Color(0xFFE9C982), size: 17),
+          ]),
+          const Spacer(),
+          const Text('Find what\nmoves you forward.', style: TextStyle(color: Colors.white, fontSize: 25, height: 1.04, fontWeight: FontWeight.w900, letterSpacing: -.8)),
+          const SizedBox(height: 7),
+          const Text('Businesses. Services. Opportunities.', style: TextStyle(color: Color(0xFFD2E5DA), fontSize: 11, fontWeight: FontWeight.w600)),
+          const Spacer(),
+          Row(children: [
+            Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7), decoration: BoxDecoration(color: const Color(0xFFE9C982), borderRadius: BorderRadius.circular(9)), child: const Row(children: [
+              Text('Explore network', style: TextStyle(color: Color(0xFF10251D), fontSize: 10, fontWeight: FontWeight.w900)),
+              SizedBox(width: 5), Icon(Icons.arrow_forward_rounded, color: Color(0xFF10251D), size: 13),
+            ])),
+            const SizedBox(width: 10),
+            Text('$resultCount listings found', style: const TextStyle(color: Color(0xFFBBD2C5), fontSize: 9, fontWeight: FontWeight.w700)),
+          ]),
+        ]),
+      ),
+    ]),
+  );
+}
+
 class _DiscoverCategory {
   final String label; final IconData icon; final String query;
   const _DiscoverCategory(this.label, this.icon, this.query);
