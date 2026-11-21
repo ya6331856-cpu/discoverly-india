@@ -619,6 +619,58 @@ class _OpportunitiesScreenState extends State<OpportunitiesScreen> {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Quotation sent successfully.')));
     }
   }
+  Future<void> showDetails(Map<String, dynamic> lead) async {
+    final company = lead['companies'] is Map ? lead['companies']['display_name']?.toString() : null;
+    final status = (lead['status'] ?? 'new').toString();
+    final message = (lead['message'] ?? '').toString().trim();
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      useSafeArea: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(27))),
+      builder: (sheetContext) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text('Opportunity details', style: TextStyle(fontSize: 11, letterSpacing: .8, color: green, fontWeight: FontWeight.w900)),
+            const SizedBox(height: 7),
+            Text(lead['subject']?.toString() ?? 'Business opportunity', style: const TextStyle(fontSize: 22, height: 1.15, color: ink, fontWeight: FontWeight.w900)),
+            const SizedBox(height: 12),
+            Row(children: [
+              const Icon(Icons.business_outlined, size: 17, color: green),
+              const SizedBox(width: 7),
+              Expanded(child: Text(company ?? 'DISCOVERLY customer', style: const TextStyle(fontSize: 13, color: Color(0xFF65736B), fontWeight: FontWeight.w700))),
+              _StatusPill(status: status),
+            ]),
+            const SizedBox(height: 16),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(color: const Color(0xFFF6F8F6), borderRadius: BorderRadius.circular(15)),
+              child: Text(message.isEmpty ? 'The customer has not added any further details.' : message,
+                style: const TextStyle(fontSize: 13, height: 1.5, color: Color(0xFF526158))),
+            ),
+            const SizedBox(height: 18),
+            if (!['accepted', 'rejected', 'closed', 'completed'].contains(status.toLowerCase()))
+              FilledButton.icon(
+                onPressed: () {
+                  Navigator.pop(sheetContext);
+                  sendQuote(lead);
+                },
+                icon: const Icon(Icons.request_quote_outlined),
+                label: const Text('Prepare quotation'),
+              ),
+            OutlinedButton(onPressed: () => Navigator.pop(sheetContext), child: const Text('Close')),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override Widget build(BuildContext context) {
     final visible = filter == 'All' ? rows : rows.where((r) => (r['status'] ?? 'new').toString().toLowerCase() == filter.toLowerCase()).toList();
     return loading ? const Center(child: CircularProgressIndicator(color: green))
