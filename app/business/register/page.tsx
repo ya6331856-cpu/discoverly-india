@@ -80,7 +80,7 @@ export default function BusinessRegisterPage(){
   <section className="registerCard">
    <div className="formHeader"><div><small className="eyebrow">STEP 1 · BASIC DETAILS</small><h2>Tell us about your business</h2></div><span>DRAFT PROFILE</span></div>
    {error&&<p className="formError" role="alert">{error}</p>}
-   {success?<div className="formSuccess"><span>✓</span><h3>Business profile created</h3><p>{success}</p><a href="/">Return to Discoverly ↗</a></div>:
+   {success?<div className="formSuccess"><span>✓</span><h3>Business profile created</h3><p>{success}</p><a href="/account">Open my account ↗</a></div>:
    <form onSubmit={submit} className="businessForm">
     <div className="fieldGrid">
      <label>Public business name *<input required maxLength={120} value={displayName} onChange={e=>setDisplayName(e.target.value)} placeholder="e.g. Sunrise Engineering"/></label>
