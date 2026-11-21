@@ -43,8 +43,14 @@ jobs:
           PY
       - name: Remove generated placeholder test
         run: rm -f test/widget_test.dart
+      - name: Generate premium app icon assets
+        run: |
+          python3 -m pip install --quiet pillow
+          python3 tooling/generate_icon.py
       - name: Install packages
         run: flutter pub get
+      - name: Apply Android launcher icon
+        run: dart run flutter_launcher_icons
       - name: Analyze
         run: flutter analyze --no-fatal-infos
       - name: Build release APK
