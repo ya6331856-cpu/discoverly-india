@@ -283,12 +283,43 @@ class _OpportunitiesScreenState extends State<OpportunitiesScreen> {
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
-  @override Widget build(BuildContext context) { final user = supabase.auth.currentUser; return ListView(padding: const EdgeInsets.all(18), children: [
-    Card(child: Padding(padding: const EdgeInsets.all(18), child: Row(children: [const CircleAvatar(radius: 27, backgroundColor: Color(0xFFE7F3EF), child: Icon(Icons.person, color: green, size: 30)), const SizedBox(width: 14), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(user?.userMetadata?['display_name'] ?? 'DISCOVERLY user', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)), Text(user?.email ?? '', style: const TextStyle(color: Colors.black54))]))]))),
-    const SizedBox(height: 12), ListTile(leading: const Icon(Icons.notifications_none), title: const Text('Notifications'), trailing: const Icon(Icons.chevron_right), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()))),
-    ListTile(leading: const Icon(Icons.business_outlined), title: const Text('Business portal'), subtitle: const Text('Manage your business from the website')),
-    const SizedBox(height: 20), OutlinedButton.icon(onPressed: () async { await supabase.auth.signOut(); if (context.mounted) Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const AuthScreen()), (_) => false); }, icon: const Icon(Icons.logout), label: const Text('Logout'))
-  ]); }
+  @override Widget build(BuildContext context) {
+    final user = supabase.auth.currentUser;
+    final display = user?.userMetadata?['display_name']?.toString();
+    final initial = display != null && display.trim().isNotEmpty ? display.trim()[0].toUpperCase() : (user?.email?.isNotEmpty == true ? user!.email![0].toUpperCase() : 'D');
+    return ListView(padding: const EdgeInsets.fromLTRB(18, 12, 18, 30), children: [
+      const Text('YOUR SPACE', style: TextStyle(fontSize: 11, color: green, fontWeight: FontWeight.w900, letterSpacing: 1.3)),
+      const SizedBox(height: 8), const Text('Your profile', style: TextStyle(fontSize: 29, fontWeight: FontWeight.w900, color: ink)),
+      const SizedBox(height: 7), const Text('Manage your account and stay connected.', style: TextStyle(fontSize: 15, color: Color(0xFF718078))),
+      const SizedBox(height: 20),
+      Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [ink, Color(0xFF123F32), green]), borderRadius: BorderRadius.circular(25)), child: Row(children: [
+        Container(width: 62, height: 62, alignment: Alignment.center, decoration: BoxDecoration(color: Colors.white.withValues(alpha: .15), shape: BoxShape.circle, border: Border.all(color: Colors.white30)), child: Text(initial, style: const TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.w900))),
+        const SizedBox(width: 15), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(display?.isNotEmpty == true ? display! : 'DISCOVERLY member', style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 5), Text(user?.email ?? '', style: const TextStyle(color: Color(0xFFD5E7DF), fontSize: 13)),
+          const SizedBox(height: 9), Container(padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5), decoration: BoxDecoration(color: Colors.white.withValues(alpha: .13), borderRadius: BorderRadius.circular(20)), child: const Text('MEMBER ACCOUNT', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: .8))),
+        ])),
+      ])),
+      const SizedBox(height: 27), const Text('ACCOUNT & SETTINGS', style: TextStyle(fontSize: 11, color: green, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
+      const SizedBox(height: 12),
+      _ProfileTile(icon: Icons.notifications_none_rounded, title: 'Notifications', subtitle: 'Updates and account activity', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()))),
+      const SizedBox(height: 10), const _ProfileTile(icon: Icons.business_outlined, title: 'Business portal', subtitle: 'Manage your business from the website'),
+      const SizedBox(height: 10), const _ProfileTile(icon: Icons.security_outlined, title: 'Privacy & security', subtitle: 'Your account is protected by Supabase'),
+      const SizedBox(height: 24),
+      OutlinedButton.icon(onPressed: () async { await supabase.auth.signOut(); if (context.mounted) Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const AuthScreen()), (_) => false); }, icon: const Icon(Icons.logout_rounded), label: const Text('Sign out'), style: OutlinedButton.styleFrom(foregroundColor: const Color(0xFFB33A3A), minimumSize: const Size(0, 54), side: const BorderSide(color: Color(0xFFEBD4D4)), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)))),
+      const SizedBox(height: 20), const Center(child: Text('DISCOVERLY  •  CONNECT WITH POSSIBILITY', style: TextStyle(color: Color(0xFF718078), fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: .8))),
+    ]);
+  }
+}
+
+class _ProfileTile extends StatelessWidget {
+  final IconData icon; final String title, subtitle; final VoidCallback? onTap;
+  const _ProfileTile({required this.icon, required this.title, required this.subtitle, this.onTap});
+  @override Widget build(BuildContext context) => Material(color: Colors.white, borderRadius: BorderRadius.circular(18), child: InkWell(onTap: onTap, borderRadius: BorderRadius.circular(18), child: Container(padding: const EdgeInsets.all(15), decoration: BoxDecoration(borderRadius: BorderRadius.circular(18), border: Border.all(color: const Color(0xFFE5ECE7))), child: Row(children: [
+    Container(width: 45, height: 45, decoration: BoxDecoration(color: const Color(0xFFE5F2EB), borderRadius: BorderRadius.circular(14)), child: Icon(icon, color: green, size: 23)),
+    const SizedBox(width: 13), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: ink)), const SizedBox(height: 3), Text(subtitle, style: const TextStyle(fontSize: 12, color: Color(0xFF718078)))])),
+    const Icon(Icons.chevron_right_rounded, color: Color(0xFF718078)),
+  ]))));
 }
 
 class NotificationsScreen extends StatefulWidget { const NotificationsScreen({super.key}); @override State<NotificationsScreen> createState() => _NotificationsScreenState(); }
