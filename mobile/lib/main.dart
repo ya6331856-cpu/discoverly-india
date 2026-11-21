@@ -319,82 +319,145 @@ class BusinessTile extends StatelessWidget {
   }
 }
 
-class RequirementsScreen extends StatefulWidget { const RequirementsScreen({super.key}); @override State<RequirementsScreen> createState() => _RequirementsScreenState(); }
-class _RequirementsScreenState extends State<RequirementsScreen> {
-  List<dynamic> rows = []; bool loading = true;
-  Future<void> load() async { try { final r = await supabase.from('requirements').select('id,title,description,city,state,status,created_at').eq('buyer_user_id', supabase.auth.currentUser!.id).order('created_at', ascending: false); if (mounted) setState(() => rows = r); } catch (_) {} if (mounted) setState(() => loading = false); }
-  @override void initState() { super.initState(); load(); }
-  Future<void> add() async { final title = TextEditingController(), desc = TextEditingController(), city = TextEditingController(), state = TextEditingController();
-    final ok = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(title: const Text('Post a requirement'), content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [TextField(controller: title, decoration: const InputDecoration(labelText: 'What do you need?')), const SizedBox(height: 10), TextField(controller: desc, maxLines: 3, decoration: const InputDecoration(labelText: 'Details')), const SizedBox(height: 10), TextField(controller: city, decoration: const InputDecoration(labelText: 'City')), const SizedBox(height: 10), TextField(controller: state, decoration: const InputDecoration(labelText: 'State'))])), actions: [TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')), FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Post'))]));
-    if (ok != true || title.text.trim().isEmpty) return;
-    try { await supabase.rpc('create_requirement_and_match', params: {'p_title': title.text.trim(), 'p_description': desc.text.trim(), 'p_requirement_type': 'other', 'p_category_id': null, 'p_city': city.text.trim().isEmpty ? null : city.text.trim(), 'p_state': state.text.trim().isEmpty ? null : state.text.trim()}); await load(); if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Requirement posted successfully'))); }
-    catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Your requirement could not be posted. Please check the details and try again.'))); }
-  }
-  @override
-  Widget build(BuildContext context) {
-    final children = rows.map((r) => Container(
-      margin: const EdgeInsets.only(bottom: 11), padding: const EdgeInsets.all(17),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFFE5ECE7))),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [Expanded(child: Text(r['title'] ?? '', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: ink))), Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), decoration: BoxDecoration(color: const Color(0xFFE5F2EB), borderRadius: BorderRadius.circular(30)), child: Text((r['status'] ?? 'open').toString().toUpperCase(), style: const TextStyle(color: green, fontSize: 10, fontWeight: FontWeight.w900)))]),
-        const SizedBox(height: 10),
-        Text(r['description'] ?? 'Requirement details', maxLines: 3, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, color: Color(0xFF718078), height: 1.4)),
-        const SizedBox(height: 12),
-        Row(children: [const Icon(Icons.location_on_outlined, size: 16, color: green), const SizedBox(width: 4), Text('${r['city'] ?? ''} ${r['state'] ?? ''}', style: const TextStyle(fontSize: 12, color: green, fontWeight: FontWeight.w700))]),
-      ]),
-    )).toList();
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      floatingActionButton: FloatingActionButton.extended(onPressed: add, backgroundColor: green, foregroundColor: Colors.white, icon: const Icon(Icons.add_rounded), label: const Text('Post requirement', style: TextStyle(fontWeight: FontWeight.w800))),
-      body: loading ? const Center(child: CircularProgressIndicator(color: green))
-          : rows.isEmpty ? ListView(padding: const EdgeInsets.all(20), children: const [
-              SizedBox(height: 14),
-              Text('YOUR REQUESTS', style: TextStyle(fontSize: 11, color: green, fontWeight: FontWeight.w900, letterSpacing: 1.3)),
-              SizedBox(height: 8), Text('Make it happen.', style: TextStyle(fontSize: 29, fontWeight: FontWeight.w900, color: ink)),
-              SizedBox(height: 7), Text('Tell businesses what you need and let the right providers find you.', style: TextStyle(fontSize: 15, color: Color(0xFF718078), height: 1.4)),
-              SizedBox(height: 55),
-              Icon(Icons.assignment_add, size: 58, color: green),
-              SizedBox(height: 14), Center(child: Text('No requests yet', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900, color: ink))),
-              SizedBox(height: 7), Center(child: Text('Post your first requirement to start receiving relevant business matches.', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF718078), height: 1.5))),
-            ])
-          : ListView(padding: const EdgeInsets.fromLTRB(18, 14, 18, 100), children: [
-              const Text('YOUR REQUESTS', style: TextStyle(fontSize: 11, color: green, fontWeight: FontWeight.w900, letterSpacing: 1.3)),
-              const SizedBox(height: 8), const Text('Your requirements', style: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: ink)),
-              const SizedBox(height: 6), const Text('Keep track of what you have requested.', style: TextStyle(fontSize: 14, color: Color(0xFF718078))),
-              const SizedBox(height: 20), ...children,
-            ]),
-    );
-  }
+class RequirementsScreen extends StatefulWidget {
+  const RequirementsScreen({super.key});
+  @override State<RequirementsScreen> createState() => _RequirementsScreenState();
 }
-
-class OpportunitiesScreen extends StatefulWidget { const OpportunitiesScreen({super.key}); @override State<OpportunitiesScreen> createState() => _OpportunitiesScreenState(); }
+class _RequirementsScreenState extends State<RequirementsScreen> {
+  List<dynamic> rows = [];
+  bool loading = true;
+  Future<void> load() async {
+    try {
+      final r = await supabase.from('requirements').select('id,title,description,city,state,status,created_at').eq('buyer_user_id', supabase.auth.currentUser!.id).order('created_at', ascending: false);
+      if (mounted) setState(() => rows = r);
+    } catch (_) {}
+    if (mounted) setState(() => loading = false);
+  }
+  @override void initState() { super.initState(); load(); }
+  Future<void> add() async {
+    final title = TextEditingController(), desc = TextEditingController(), city = TextEditingController(), state = TextEditingController();
+    final ok = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(
+      title: const Text('Post a requirement'),
+      content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
+        TextField(controller: title, decoration: const InputDecoration(labelText: 'What do you need?')),
+        const SizedBox(height: 10), TextField(controller: desc, maxLines: 3, decoration: const InputDecoration(labelText: 'Details')),
+        const SizedBox(height: 10), TextField(controller: city, decoration: const InputDecoration(labelText: 'City')),
+        const SizedBox(height: 10), TextField(controller: state, decoration: const InputDecoration(labelText: 'State')),
+      ])),
+      actions: [TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')), FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Post'))],
+    ));
+    if (ok != true || title.text.trim().isEmpty) return;
+    try {
+      await supabase.rpc('create_requirement_and_match', params: {'p_title': title.text.trim(), 'p_description': desc.text.trim(), 'p_requirement_type': 'other', 'p_category_id': null, 'p_city': city.text.trim().isEmpty ? null : city.text.trim(), 'p_state': state.text.trim().isEmpty ? null : state.text.trim()});
+      await load();
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Requirement posted successfully')));
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Your requirement could not be posted. Please check the details and try again.')));
+    }
+  }
+  @override Widget build(BuildContext context) => Scaffold(
+    backgroundColor: Colors.transparent,
+    floatingActionButton: FloatingActionButton.extended(onPressed: add, backgroundColor: green, foregroundColor: Colors.white, icon: const Icon(Icons.add_rounded), label: const Text('New request', style: TextStyle(fontWeight: FontWeight.w800))),
+    body: loading ? const Center(child: CircularProgressIndicator(color: green))
+      : RefreshIndicator(color: green, onRefresh: load, child: ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 95), children: [
+        const _SectionHeading(kicker: 'BUYER WORKSPACE', title: 'Your requests', subtitle: 'Track requirements and business responses.'),
+        const SizedBox(height: 15),
+        Container(padding: const EdgeInsets.all(15), decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF102A22), Color(0xFF14513D)]), borderRadius: BorderRadius.circular(18)), child: Row(children: [
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('REQUEST OVERVIEW', style: TextStyle(color: Color(0xFFBFD9CC), fontSize: 8, letterSpacing: 1, fontWeight: FontWeight.w900)),
+            const SizedBox(height: 5), Text('${rows.length} active records', style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w900)),
+            const SizedBox(height: 4), const Text('Your posted needs in one place', style: TextStyle(color: Color(0xFFD3E4DC), fontSize: 10)),
+          ])),
+          Container(width: 48, height: 48, decoration: BoxDecoration(color: Colors.white.withValues(alpha: .12), borderRadius: BorderRadius.circular(15)), child: const Icon(Icons.assignment_turned_in_outlined, color: Color(0xFFE7C987), size: 24)),
+        ])),
+        const SizedBox(height: 16),
+        if (rows.isEmpty) const _CompactEmpty(icon: Icons.post_add_rounded, title: 'No requirements posted', message: 'Create your first request and let matching businesses discover what you need.', action: 'Use the New request button', onTap: _noAction)
+        else ...rows.map((r) {
+          final status = (r['status'] ?? 'open').toString();
+          final location = [r['city'], r['state']].where((v) => v != null && v.toString().trim().isNotEmpty).join(', ');
+          return Container(margin: const EdgeInsets.only(bottom: 10), padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(17), border: Border.all(color: const Color(0xFFE5ECE7))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              Expanded(child: Text(r['title'] ?? 'Untitled requirement', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, color: ink, fontWeight: FontWeight.w900))),
+              _StatusPill(status: status),
+            ]),
+            const SizedBox(height: 7), Text(r['description'] ?? 'No additional details provided.', maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, color: Color(0xFF718078), height: 1.4)),
+            const SizedBox(height: 10), Row(children: [
+              const Icon(Icons.location_on_outlined, color: green, size: 14), const SizedBox(width: 4),
+              Expanded(child: Text(location.isEmpty ? 'Location not specified' : location, style: const TextStyle(fontSize: 10, color: green, fontWeight: FontWeight.w700))),
+              const Icon(Icons.chevron_right_rounded, color: Color(0xFF9AA69F), size: 17),
+            ]),
+          ]));
+        }),
+      ])),
+  );
+}
+void _noAction() {}
+class OpportunitiesScreen extends StatefulWidget {
+  const OpportunitiesScreen({super.key});
+  @override State<OpportunitiesScreen> createState() => _OpportunitiesScreenState();
+}
 class _OpportunitiesScreenState extends State<OpportunitiesScreen> {
-  List<dynamic> rows = []; bool loading = true;
-  Future<void> load() async { try { final r = await supabase.from('leads').select('id,subject,message,status,created_at,companies(display_name)').order('created_at', ascending: false); if (mounted) setState(() => rows = r); } catch (_) {} if (mounted) setState(() => loading = false); }
+  List<dynamic> rows = [];
+  bool loading = true;
+  Future<void> load() async {
+    try {
+      final r = await supabase.from('leads').select('id,subject,message,status,created_at,companies(display_name)').order('created_at', ascending: false);
+      if (mounted) setState(() => rows = r);
+    } catch (_) {}
+    if (mounted) setState(() => loading = false);
+  }
   @override void initState() { super.initState(); load(); }
   @override Widget build(BuildContext context) => loading
     ? const Center(child: CircularProgressIndicator(color: green))
-    : rows.isEmpty
-      ? ListView(padding: const EdgeInsets.all(20), children: const [
-          SizedBox(height: 14),
-          Text('OPPORTUNITY DESK', style: TextStyle(fontSize: 11, color: green, fontWeight: FontWeight.w900, letterSpacing: 1.3)),
-          SizedBox(height: 8), Text('Your next big lead.', style: TextStyle(fontSize: 29, fontWeight: FontWeight.w900, color: ink)),
-          SizedBox(height: 7), Text('Relevant business opportunities will appear here.', style: TextStyle(fontSize: 15, color: Color(0xFF718078))),
-          SizedBox(height: 60), Icon(Icons.work_outline_rounded, size: 58, color: green),
-          SizedBox(height: 14), Center(child: Text('No opportunities yet', style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900, color: ink))),
-          SizedBox(height: 7), Center(child: Text('Matching opportunities will appear here as businesses and customers connect.', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF718078), height: 1.5))),
-        ])
-      : ListView(padding: const EdgeInsets.all(18), children: [
-          const Text('OPPORTUNITY DESK', style: TextStyle(fontSize: 11, color: green, fontWeight: FontWeight.w900, letterSpacing: 1.3)),
-          const SizedBox(height: 8), const Text('Explore leads', style: TextStyle(fontSize: 29, fontWeight: FontWeight.w900, color: ink)),
-          const SizedBox(height: 6), const Text('Stay close to new business opportunities.', style: TextStyle(fontSize: 14, color: Color(0xFF718078))),
-          const SizedBox(height: 20),
-          ...rows.map((r) => Container(margin: const EdgeInsets.only(bottom: 12), padding: const EdgeInsets.all(17), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFFE5ECE7))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [Container(width: 43, height: 43, decoration: BoxDecoration(color: const Color(0xFFE5F2EB), borderRadius: BorderRadius.circular(14)), child: const Icon(Icons.bolt_rounded, color: green, size: 24)), const SizedBox(width: 12), Expanded(child: Text(r['subject'] ?? 'Opportunity', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: ink))), Text((r['status'] ?? 'NEW').toString().toUpperCase(), style: const TextStyle(fontSize: 10, color: green, fontWeight: FontWeight.w900))]),
-            const SizedBox(height: 12), Text(r['message'] ?? '', style: const TextStyle(fontSize: 14, color: Color(0xFF718078), height: 1.45)),
-            const SizedBox(height: 12), const Divider(color: Color(0xFFE5ECE7)), const Row(children: [Icon(Icons.auto_awesome_outlined, size: 16, color: gold), SizedBox(width: 6), Text('DISCOVERLY opportunity', style: TextStyle(fontSize: 12, color: Color(0xFF718078), fontWeight: FontWeight.w700))]),
-          ]))),
-        ]);
+    : RefreshIndicator(color: green, onRefresh: load, child: ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 25), children: [
+      const _SectionHeading(kicker: 'BUSINESS WORKSPACE', title: 'Opportunity desk', subtitle: 'Keep an eye on new business enquiries.'),
+      const SizedBox(height: 15),
+      Container(padding: const EdgeInsets.all(15), decoration: BoxDecoration(color: const Color(0xFF112820), borderRadius: BorderRadius.circular(18)), child: Row(children: [
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text('YOUR LEAD PIPELINE', style: TextStyle(color: Color(0xFFBFD9CC), fontSize: 8, letterSpacing: 1, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 5), Text('${rows.length.toString().padLeft(2, '0')} opportunities', style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 4), const Text('New enquiries and matching requests', style: TextStyle(color: Color(0xFFD3E4DC), fontSize: 10)),
+        ])),
+        const Icon(Icons.insights_rounded, color: Color(0xFFE7C987), size: 37),
+      ])),
+      const SizedBox(height: 15),
+      if (rows.isEmpty) const _CompactEmpty(icon: Icons.work_outline_rounded, title: 'No opportunities yet', message: 'When matching enquiries become available, they will appear here.', action: 'Pull down to refresh', onTap: _noAction)
+      else ...rows.map((r) {
+        final company = r['companies'] is Map ? r['companies']['display_name'] : null;
+        return Container(margin: const EdgeInsets.only(bottom: 10), padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(17), border: Border.all(color: const Color(0xFFE5ECE7))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Container(width: 39, height: 39, decoration: BoxDecoration(color: const Color(0xFFEAF2EC), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.bolt_rounded, color: green, size: 21)),
+            const SizedBox(width: 10), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(r['subject'] ?? 'Business opportunity', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: ink, fontWeight: FontWeight.w900)),
+              const SizedBox(height: 3), Text(company?.toString() ?? 'DISCOVERLY network', style: const TextStyle(fontSize: 10, color: Color(0xFF718078))),
+            ])),
+            _StatusPill(status: (r['status'] ?? 'new').toString()),
+          ]),
+          const SizedBox(height: 10), Text(r['message'] ?? 'No additional details provided.', style: const TextStyle(fontSize: 11, height: 1.4, color: Color(0xFF718078))),
+          const SizedBox(height: 9), const Divider(height: 1, color: Color(0xFFE9EEEA)),
+          const SizedBox(height: 8), const Row(children: [Icon(Icons.auto_awesome_outlined, size: 13, color: gold), SizedBox(width: 5), Text('DISCOVERLY MATCH', style: TextStyle(fontSize: 8, letterSpacing: .8, color: Color(0xFF718078), fontWeight: FontWeight.w900))]),
+        ]));
+      }),
+    ]));
+}
+
+class _SectionHeading extends StatelessWidget {
+  final String kicker, title, subtitle;
+  const _SectionHeading({required this.kicker, required this.title, required this.subtitle});
+  @override Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    Text(kicker, style: const TextStyle(fontSize: 9, letterSpacing: 1.15, color: green, fontWeight: FontWeight.w900)),
+    const SizedBox(height: 4), Text(title, style: const TextStyle(fontSize: 21, letterSpacing: -.4, color: ink, fontWeight: FontWeight.w900)),
+    const SizedBox(height: 3), Text(subtitle, style: const TextStyle(fontSize: 11, color: Color(0xFF718078))),
+  ]);
+}
+class _StatusPill extends StatelessWidget {
+  final String status;
+  const _StatusPill({required this.status});
+  @override Widget build(BuildContext context) {
+    final normalized = status.toLowerCase();
+    final color = normalized == 'accepted' || normalized == 'completed' ? const Color(0xFF17835F) : normalized == 'rejected' || normalized == 'closed' ? const Color(0xFFB75A51) : const Color(0xFF9A742E);
+    return Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), decoration: BoxDecoration(color: color.withValues(alpha: .10), borderRadius: BorderRadius.circular(20)), child: Text(status.toUpperCase(), style: TextStyle(fontSize: 8, letterSpacing: .4, color: color, fontWeight: FontWeight.w900)));
+  }
 }
 
 class ProfileScreen extends StatelessWidget {
@@ -403,41 +466,30 @@ class ProfileScreen extends StatelessWidget {
     final user = supabase.auth.currentUser;
     final display = user?.userMetadata?['display_name']?.toString();
     final initial = display != null && display.trim().isNotEmpty ? display.trim()[0].toUpperCase() : (user?.email?.isNotEmpty == true ? user!.email![0].toUpperCase() : 'D');
-    return ListView(padding: const EdgeInsets.fromLTRB(18, 12, 18, 30), children: [
-      const Text('YOUR SPACE', style: TextStyle(fontSize: 11, color: green, fontWeight: FontWeight.w900, letterSpacing: 1.3)),
-      const SizedBox(height: 8), const Text('Your profile', style: TextStyle(fontSize: 29, fontWeight: FontWeight.w900, color: ink)),
-      const SizedBox(height: 7), const Text('Manage your account and stay connected.', style: TextStyle(fontSize: 15, color: Color(0xFF718078))),
-      const SizedBox(height: 20),
-      Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [ink, Color(0xFF123F32), green]), borderRadius: BorderRadius.circular(25)), child: Row(children: [
-        Container(width: 62, height: 62, alignment: Alignment.center, decoration: BoxDecoration(color: Colors.white.withValues(alpha: .15), shape: BoxShape.circle, border: Border.all(color: Colors.white30)), child: Text(initial, style: const TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.w900))),
-        const SizedBox(width: 15), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(display?.isNotEmpty == true ? display! : 'DISCOVERLY member', style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w900)),
-          const SizedBox(height: 5), Text(user?.email ?? '', style: const TextStyle(color: Color(0xFFD5E7DF), fontSize: 13)),
-          const SizedBox(height: 9), Container(padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5), decoration: BoxDecoration(color: Colors.white.withValues(alpha: .13), borderRadius: BorderRadius.circular(20)), child: const Text('MEMBER ACCOUNT', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: .8))),
+    return ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 25), children: [
+      const _SectionHeading(kicker: 'ACCOUNT CENTRE', title: 'Your profile', subtitle: 'Manage your identity and account preferences.'),
+      const SizedBox(height: 15),
+      Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF0D241E), Color(0xFF0F6048)]), borderRadius: BorderRadius.circular(20)), child: Row(children: [
+        Container(width: 54, height: 54, alignment: Alignment.center, decoration: BoxDecoration(color: Colors.white.withValues(alpha: .13), shape: BoxShape.circle, border: Border.all(color: const Color(0x55FFFFFF))), child: Text(initial, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900))),
+        const SizedBox(width: 12), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(display?.isNotEmpty == true ? display! : 'DISCOVERLY member', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 4), Text(user?.email ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFFD5E7DF), fontSize: 10)),
+          const SizedBox(height: 7), const Row(children: [Icon(Icons.verified_user_outlined, color: Color(0xFFE7C987), size: 12), SizedBox(width: 4), Text('SUPABASE ACCOUNT', style: TextStyle(color: Color(0xFFE7C987), fontSize: 8, letterSpacing: .8, fontWeight: FontWeight.w900))]),
         ])),
+        const Icon(Icons.north_east_rounded, color: Color(0xFFD5E7DF), size: 17),
       ])),
-      const SizedBox(height: 27), const Text('ACCOUNT & SETTINGS', style: TextStyle(fontSize: 11, color: green, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
-      const SizedBox(height: 12),
+      const SizedBox(height: 19),
+      const Text('PREFERENCES & SECURITY', style: TextStyle(fontSize: 9, color: green, letterSpacing: 1, fontWeight: FontWeight.w900)),
+      const SizedBox(height: 9),
       _ProfileTile(icon: Icons.notifications_none_rounded, title: 'Notifications', subtitle: 'Updates and account activity', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()))),
-      const SizedBox(height: 10), const _ProfileTile(icon: Icons.business_outlined, title: 'Business portal', subtitle: 'Manage your business from the website'),
-      const SizedBox(height: 10), const _ProfileTile(icon: Icons.security_outlined, title: 'Privacy & security', subtitle: 'Your account is protected by Supabase'),
-      const SizedBox(height: 24),
-      OutlinedButton.icon(onPressed: () async { await supabase.auth.signOut(); if (context.mounted) Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const AuthScreen()), (_) => false); }, icon: const Icon(Icons.logout_rounded), label: const Text('Sign out'), style: OutlinedButton.styleFrom(foregroundColor: const Color(0xFFB33A3A), minimumSize: const Size(0, 54), side: const BorderSide(color: Color(0xFFEBD4D4)), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)))),
-      const SizedBox(height: 20), const Center(child: Text('DISCOVERLY  •  CONNECT WITH POSSIBILITY', style: TextStyle(color: Color(0xFF718078), fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: .8))),
+      const SizedBox(height: 8), const _ProfileTile(icon: Icons.business_outlined, title: 'Business portal', subtitle: 'Manage your business from the website'),
+      const SizedBox(height: 8), const _ProfileTile(icon: Icons.shield_outlined, title: 'Privacy & security', subtitle: 'Your account is protected by Supabase'),
+      const SizedBox(height: 17),
+      OutlinedButton.icon(onPressed: () async { await supabase.auth.signOut(); if (context.mounted) Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const AuthScreen()), (_) => false); }, icon: const Icon(Icons.logout_rounded, size: 18), label: const Text('Sign out'), style: OutlinedButton.styleFrom(foregroundColor: const Color(0xFFB33A3A), minimumSize: const Size(0, 47), side: const BorderSide(color: Color(0xFFEBD4D4)), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)))),
+      const SizedBox(height: 14), const Center(child: Text('DISCOVERLY  •  CONNECT WITH POSSIBILITY', style: TextStyle(color: Color(0xFF8A9790), fontSize: 8, fontWeight: FontWeight.w800, letterSpacing: .8))),
     ]);
   }
 }
-
-class _ProfileTile extends StatelessWidget {
-  final IconData icon; final String title, subtitle; final VoidCallback? onTap;
-  const _ProfileTile({required this.icon, required this.title, required this.subtitle, this.onTap});
-  @override Widget build(BuildContext context) => Material(color: Colors.white, borderRadius: BorderRadius.circular(18), child: InkWell(onTap: onTap, borderRadius: BorderRadius.circular(18), child: Container(padding: const EdgeInsets.all(15), decoration: BoxDecoration(borderRadius: BorderRadius.circular(18), border: Border.all(color: const Color(0xFFE5ECE7))), child: Row(children: [
-    Container(width: 45, height: 45, decoration: BoxDecoration(color: const Color(0xFFE5F2EB), borderRadius: BorderRadius.circular(14)), child: Icon(icon, color: green, size: 23)),
-    const SizedBox(width: 13), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: ink)), const SizedBox(height: 3), Text(subtitle, style: const TextStyle(fontSize: 12, color: Color(0xFF718078)))])),
-    const Icon(Icons.chevron_right_rounded, color: Color(0xFF718078)),
-  ]))));
-}
-
 class NotificationsScreen extends StatefulWidget { const NotificationsScreen({super.key}); @override State<NotificationsScreen> createState() => _NotificationsScreenState(); }
 class _NotificationsScreenState extends State<NotificationsScreen> {
   List<dynamic> rows = []; bool loading = true;
