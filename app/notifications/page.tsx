@@ -16,7 +16,7 @@ export default function NotificationsPage(){
     if(queryError)setError(queryError.message);else setItems((data||[]) as Notification[]);
     setLoading(false);
   }
-  useEffect(()=>{void load();},[]);
+  useEffect(()=>{void Promise.resolve().then(()=>load());},[]);
   async function markRead(id:string){
     const sb=createClient();if(!sb)return;setWorking(true);
     const {error:updateError}=await sb.from("notifications").update({read_at:new Date().toISOString()}).eq("id",id);
