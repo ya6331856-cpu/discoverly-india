@@ -393,7 +393,7 @@ class _RequirementsScreenState extends State<RequirementsScreen> {
           Container(width: 48, height: 48, decoration: BoxDecoration(color: Colors.white.withValues(alpha: .12), borderRadius: BorderRadius.circular(15)), child: const Icon(Icons.assignment_turned_in_outlined, color: Color(0xFFE7C987), size: 24)),
         ])),
         const SizedBox(height: 16),
-        if (rows.isEmpty) const _CompactEmpty(icon: Icons.post_add_rounded, title: 'No requirements posted', message: 'Create your first request and let matching businesses discover what you need.', action: 'Use the New request button', onTap: _noAction)
+        if (rows.isEmpty) _CompactEmpty(icon: Icons.post_add_rounded, title: 'No requirements posted', message: 'Create your first request and let matching businesses discover what you need.', action: 'Create a request', onTap: add)
         else ...rows.map((r) {
           final status = (r['status'] ?? 'open').toString();
           final location = [r['city'], r['state']].where((v) => v != null && v.toString().trim().isNotEmpty).join(', ');
@@ -413,7 +413,6 @@ class _RequirementsScreenState extends State<RequirementsScreen> {
       ])),
   );
 }
-void _noAction() {}
 class OpportunitiesScreen extends StatefulWidget {
   const OpportunitiesScreen({super.key});
   @override State<OpportunitiesScreen> createState() => _OpportunitiesScreenState();
@@ -443,7 +442,7 @@ class _OpportunitiesScreenState extends State<OpportunitiesScreen> {
         const Icon(Icons.insights_rounded, color: Color(0xFFE7C987), size: 37),
       ])),
       const SizedBox(height: 15),
-      if (rows.isEmpty) const _CompactEmpty(icon: Icons.work_outline_rounded, title: 'No opportunities yet', message: 'When matching enquiries become available, they will appear here.', action: 'Pull down to refresh', onTap: _noAction)
+      if (rows.isEmpty) _CompactEmpty(icon: Icons.work_outline_rounded, title: 'No opportunities yet', message: 'When matching enquiries become available, they will appear here.', action: 'Refresh opportunities', onTap: load)
       else ...rows.map((r) {
         final company = r['companies'] is Map ? r['companies']['display_name'] : null;
         return Container(margin: const EdgeInsets.only(bottom: 10), padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(17), border: Border.all(color: const Color(0xFFE5ECE7))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
