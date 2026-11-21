@@ -603,26 +603,36 @@ class ProfileScreen extends StatelessWidget {
     final display = user?.userMetadata?['display_name']?.toString();
     final initial = display != null && display.trim().isNotEmpty ? display.trim()[0].toUpperCase() : (user?.email?.isNotEmpty == true ? user!.email![0].toUpperCase() : 'D');
     return ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 25), children: [
-      const _SectionHeading(kicker: 'ACCOUNT CENTRE', title: 'Your profile', subtitle: 'Manage your identity and account preferences.'),
-      const SizedBox(height: 15),
-      Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF0D241E), Color(0xFF0F6048)]), borderRadius: BorderRadius.circular(20)), child: Row(children: [
-        Container(width: 54, height: 54, alignment: Alignment.center, decoration: BoxDecoration(color: Colors.white.withValues(alpha: .13), shape: BoxShape.circle, border: Border.all(color: const Color(0x55FFFFFF))), child: Text(initial, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900))),
-        const SizedBox(width: 12), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(display?.isNotEmpty == true ? display! : 'DISCOVERLY member', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w900)),
-          const SizedBox(height: 4), Text(user?.email ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFFD5E7DF), fontSize: 10)),
-          const SizedBox(height: 7), const Row(children: [Icon(Icons.verified_user_outlined, color: Color(0xFFE7C987), size: 12), SizedBox(width: 4), Text('SUPABASE ACCOUNT', style: TextStyle(color: Color(0xFFE7C987), fontSize: 8, letterSpacing: .8, fontWeight: FontWeight.w900))]),
-        ])),
-        const Icon(Icons.north_east_rounded, color: Color(0xFFD5E7DF), size: 17),
-      ])),
-      const SizedBox(height: 19),
-      const Text('PREFERENCES & SECURITY', style: TextStyle(fontSize: 9, color: green, letterSpacing: 1, fontWeight: FontWeight.w900)),
-      const SizedBox(height: 9),
-      _ProfileTile(icon: Icons.notifications_none_rounded, title: 'Notifications', subtitle: 'Updates and account activity', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()))),
-      const SizedBox(height: 8), const _ProfileTile(icon: Icons.business_outlined, title: 'Business portal', subtitle: 'Manage your business from the website'),
-      const SizedBox(height: 8), const _ProfileTile(icon: Icons.shield_outlined, title: 'Privacy & security', subtitle: 'Your account is protected by Supabase'),
+      const _SectionHeading(kicker: 'ACCOUNT CENTRE', title: 'Your profile', subtitle: 'Your DISCOVERLY identity and account controls.'),
       const SizedBox(height: 17),
-      OutlinedButton.icon(onPressed: () async { await supabase.auth.signOut(); if (context.mounted) Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const AuthScreen()), (_) => false); }, icon: const Icon(Icons.logout_rounded, size: 18), label: const Text('Sign out'), style: OutlinedButton.styleFrom(foregroundColor: const Color(0xFFB33A3A), minimumSize: const Size(0, 47), side: const BorderSide(color: Color(0xFFEBD4D4)), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)))),
-      const SizedBox(height: 14), const Center(child: Text('DISCOVERLY  •  CONNECT WITH POSSIBILITY', style: TextStyle(color: Color(0xFF8A9790), fontSize: 8, fontWeight: FontWeight.w800, letterSpacing: .8))),
+      Container(padding: const EdgeInsets.all(17), decoration: BoxDecoration(gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF0D241E), Color(0xFF0F6048)]), borderRadius: BorderRadius.circular(21)), child: Row(children: [
+        Container(width: 60, height: 60, alignment: Alignment.center, decoration: BoxDecoration(color: Colors.white.withValues(alpha: .13), shape: BoxShape.circle, border: Border.all(color: const Color(0x55FFFFFF))), child: Text(initial, style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900))),
+        const SizedBox(width: 13), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(display?.isNotEmpty == true ? display! : 'DISCOVERLY member', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 5), Text(user?.email ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFFD5E7DF), fontSize: 11)),
+          const SizedBox(height: 8), const Row(children: [Icon(Icons.verified_user_outlined, color: Color(0xFFE7C987), size: 13), SizedBox(width: 5), Text('ACCOUNT ACTIVE', style: TextStyle(color: Color(0xFFE7C987), fontSize: 9, letterSpacing: .8, fontWeight: FontWeight.w900))]),
+        ])),
+      ])),
+      const SizedBox(height: 20),
+      const Text('YOUR ACCOUNT', style: TextStyle(fontSize: 10, color: green, letterSpacing: 1, fontWeight: FontWeight.w900)),
+      const SizedBox(height: 9),
+      _ProfileTile(icon: Icons.person_outline_rounded, title: 'Personal information', subtitle: display?.isNotEmpty == true ? display! : 'Name and sign-in identity', onTap: () => showModalBottomSheet(context: context, showDragHandle: true, useSafeArea: true, shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(26))), builder: (_) => Padding(padding: const EdgeInsets.fromLTRB(20, 8, 20, 28), child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Text('Personal information', style: TextStyle(fontSize: 21, color: ink, fontWeight: FontWeight.w900)),
+        const SizedBox(height: 17), const Text('DISPLAY NAME', style: TextStyle(fontSize: 9, color: green, fontWeight: FontWeight.w900, letterSpacing: .8)),
+        const SizedBox(height: 5), Text(display?.isNotEmpty == true ? display! : 'Not provided', style: const TextStyle(fontSize: 15, color: ink, fontWeight: FontWeight.w700)),
+        const SizedBox(height: 15), const Text('EMAIL ADDRESS', style: TextStyle(fontSize: 9, color: green, fontWeight: FontWeight.w900, letterSpacing: .8)),
+        const SizedBox(height: 5), Text(user?.email ?? 'Not available', style: const TextStyle(fontSize: 15, color: ink, fontWeight: FontWeight.w700)),
+        const SizedBox(height: 8), const Text('Profile editing will be enabled with the profile management module.', style: TextStyle(fontSize: 12, color: Color(0xFF718078), height: 1.4)),
+      ])))),
+      const SizedBox(height: 8),
+      _ProfileTile(icon: Icons.notifications_none_rounded, title: 'Notifications', subtitle: 'Account updates and activity', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()))),
+      const SizedBox(height: 8),
+      _ProfileTile(icon: Icons.business_center_outlined, title: 'Business onboarding', subtitle: 'Register a business and manage services', onTap: () => showDialog(context: context, builder: (_) => AlertDialog(title: const Text('Business onboarding'), content: const Text('Business registration and company profile management are still being integrated.'), actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close'))]))),
+      const SizedBox(height: 8),
+      _ProfileTile(icon: Icons.shield_outlined, title: 'Privacy & security', subtitle: 'Authentication and account protection', onTap: () => showDialog(context: context, builder: (_) => AlertDialog(title: const Text('Account security'), content: Text('Signed in as ' + (user?.email ?? 'your account') + '. Authentication is managed securely by Supabase.'), actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close'))]))),
+      const SizedBox(height: 20),
+      OutlinedButton.icon(onPressed: () async { await supabase.auth.signOut(); if (context.mounted) Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const AuthScreen()), (_) => false); }, icon: const Icon(Icons.logout_rounded, size: 18), label: const Text('Sign out'), style: OutlinedButton.styleFrom(foregroundColor: const Color(0xFFB33A3A), minimumSize: const Size(0, 49), side: const BorderSide(color: Color(0xFFEBD4D4)), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)))),
+      const SizedBox(height: 17), const Center(child: Text('DISCOVERLY  •  CONNECT WITH POSSIBILITY', style: TextStyle(color: Color(0xFF8A9790), fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: .8))),
     ]);
   }
 }
