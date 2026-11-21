@@ -63,13 +63,13 @@ class _AuthScreenState extends State<AuthScreen> {
       if (signup) {
         final r = await supabase.auth.signUp(email: email.text.trim(), password: password.text,
           data: {'display_name': name.text.trim()});
-        if (r.session == null && mounted) setState(() => notice = 'Email par confirmation link bheja gaya hai. Link open karke login karein.');
+        if (r.session == null && mounted) setState(() => notice = 'A confirmation link has been sent to your email. Open it to continue.');
       } else {
         await supabase.auth.signInWithPassword(email: email.text.trim(), password: password.text);
         if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainShell()));
       }
     } on AuthException catch (e) { setState(() => error = e.message); }
-      catch (e) { setState(() => error = 'Kuch problem hui. Internet check karke dobara try karein.'); }
+      catch (e) { setState(() => error = 'Something went wrong. Check your internet connection and try again.'); }
     if (mounted) setState(() => busy = false);
   }
   @override void dispose() { email.dispose(); password.dispose(); name.dispose(); super.dispose(); }
@@ -127,77 +127,168 @@ class _MainShellState extends State<MainShell> {
   );
 }
 
-class DiscoverScreen extends StatefulWidget { const DiscoverScreen({super.key}); @override State<DiscoverScreen> createState() => _DiscoverScreenState(); }
+class DiscoverScreen extends StatefulWidget {
+  const DiscoverScreen({super.key});
+  @override State<DiscoverScreen> createState() => _DiscoverScreenState();
+}
 class _DiscoverScreenState extends State<DiscoverScreen> {
   final search = TextEditingController(), city = TextEditingController();
-  List<dynamic> results = []; bool loading = false; String? error;
+  List<dynamic> results = []; bool loading = false; String? error; String activeCategory = 'All';
+  final categories = const [
+    _DiscoverCategory('Home services', Icons.home_repair_service_rounded, 'Services'),
+    _DiscoverCategory('Food & dining', Icons.restaurant_rounded, 'Food'),
+    _DiscoverCategory('Shopping', Icons.shopping_bag_rounded, 'Shopping'),
+    _DiscoverCategory('Technology', Icons.devices_rounded, 'Technology'),
+    _DiscoverCategory('Healthcare', Icons.health_and_safety_rounded, 'Healthcare'),
+    _DiscoverCategory('Professional', Icons.business_center_rounded, 'Professional'),
+    _DiscoverCategory('Education', Icons.school_rounded, 'Education'),
+    _DiscoverCategory('Travel', Icons.flight_takeoff_rounded, 'Travel'),
+  ];
   Future<void> find() async {
     setState(() { loading = true; error = null; });
-    try { final data = await supabase.rpc('search_businesses', params: {'search_query': search.text.trim().isEmpty ? null : search.text.trim(), 'category_slug': null, 'state_filter': null, 'city_filter': city.text.trim().isEmpty ? null : city.text.trim(), 'result_limit': 40, 'result_offset': 0}); setState(() => results = (data as List).cast<dynamic>()); }
-    catch (e) { setState(() => error = 'Search load nahi hua. Backend permissions ya network check karein.'); }
+    try {
+      final data = await supabase.rpc('search_businesses', params: {
+        'search_query': search.text.trim().isEmpty ? null : search.text.trim(),
+        'category_slug': null, 'state_filter': null,
+        'city_filter': city.text.trim().isEmpty ? null : city.text.trim(),
+        'result_limit': 40, 'result_offset': 0,
+      });
+      if (mounted) setState(() => results = (data as List).cast<dynamic>());
+    } catch (_) {
+      if (mounted) setState(() => error = 'We could not load results. Please check your connection and try again.');
+    }
     if (mounted) setState(() => loading = false);
   }
+  void chooseCategory(_DiscoverCategory item) {
+    setState(() { activeCategory = item.label; search.text = item.query; });
+    find();
+  }
   @override void initState() { super.initState(); find(); }
-  @override Widget build(BuildContext context) => RefreshIndicator(onRefresh: find, child: ListView(padding: const EdgeInsets.fromLTRB(18, 8, 18, 24), children: [
-    Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [ink, Color(0xFF123F32), green]),
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: const [BoxShadow(color: Color(0x220C3D31), blurRadius: 20, offset: Offset(0, 9))],
-      ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Container(padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7), decoration: BoxDecoration(color: Colors.white.withValues(alpha: .13), borderRadius: BorderRadius.circular(30)), child: const Text('INDIA-WIDE NETWORK', style: TextStyle(color: Color(0xFFD9F1E6), fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 1.1))),
-        const SizedBox(height: 20),
-        const Text('Discover more.\nConnect smarter.', style: TextStyle(color: Colors.white, fontSize: 32, height: 1.1, fontWeight: FontWeight.w900, letterSpacing: -.8)),
-        const SizedBox(height: 12),
-        const Text('Find businesses, products and services. Or discover your next opportunity.', style: TextStyle(color: Color(0xFFD9E9E2), fontSize: 15, height: 1.5)),
-        const SizedBox(height: 22),
-        const Row(children: [
-          _HeroMetric(value: 'PAN', label: 'India'), SizedBox(width: 25),
-          _HeroMetric(value: 'ALL', label: 'Industries'), SizedBox(width: 25),
-          _HeroMetric(value: 'ONE', label: 'Network'),
-        ]),
+  @override void dispose() { search.dispose(); city.dispose(); super.dispose(); }
+  @override Widget build(BuildContext context) => RefreshIndicator(
+    onRefresh: find, color: green,
+    child: ListView(padding: const EdgeInsets.fromLTRB(18, 12, 18, 30), children: [
+      Row(children: [
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text('YOUR NEXT DISCOVERY STARTS HERE', style: TextStyle(fontSize: 10, letterSpacing: 1.1, color: green, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 5), Text('Explore what’s\naround you.', style: Theme.of(context).textTheme.headlineLarge),
+        ])),
+        Container(width: 54, height: 54, decoration: BoxDecoration(color: const Color(0xFFE6F1EA), borderRadius: BorderRadius.circular(18)), child: const Icon(Icons.public_rounded, color: green, size: 28)),
       ]),
-    ),
-    const SizedBox(height: 23), TextField(controller: search, onSubmitted: (_) => find(), decoration: InputDecoration(hintText: 'Search business, product or service', prefixIcon: const Icon(Icons.search), suffixIcon: IconButton(onPressed: find, icon: const Icon(Icons.arrow_forward)))),
-    const SizedBox(height: 10), TextField(controller: city, onSubmitted: (_) => find(), decoration: const InputDecoration(hintText: 'City (e.g. Mumbai)', prefixIcon: Icon(Icons.location_on_outlined))),
-    const SizedBox(height: 12), const Padding(padding: EdgeInsets.only(top: 12, bottom: 5), child: Text('Explore businesses', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: ink))),
-    if (loading) const Padding(padding: EdgeInsets.all(28), child: Center(child: CircularProgressIndicator())),
-    if (error != null) Padding(padding: const EdgeInsets.all(16), child: Text(error!, style: const TextStyle(color: Colors.red))),
-    if (!loading && results.isEmpty) const Padding(padding: EdgeInsets.all(22), child: Text('Abhi koi published business nahi mila. Search change karke dekhein.')),
-    ...results.map((item) => BusinessTile(item: Map<String, dynamic>.from(item as Map)))
-  ]));
+      const SizedBox(height: 17),
+      Container(padding: const EdgeInsets.all(20), decoration: BoxDecoration(
+        gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF0D211D), Color(0xFF104B3A), Color(0xFF087E63)]),
+        borderRadius: BorderRadius.circular(26), boxShadow: const [BoxShadow(color: Color(0x1F0D392D), blurRadius: 22, offset: Offset(0, 10))],
+      ), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6), decoration: BoxDecoration(color: Colors.white.withValues(alpha: .13), borderRadius: BorderRadius.circular(30)), child: const Text('DISCOVERLY  /  INDIA', style: TextStyle(color: Color(0xFFD9F1E6), fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 1))),
+          const Spacer(), const Icon(Icons.auto_awesome_rounded, color: Color(0xFFE7C987), size: 21),
+        ]),
+        const SizedBox(height: 19),
+        const Text('Find the right\npeople. Make it happen.', style: TextStyle(color: Colors.white, fontSize: 28, height: 1.12, fontWeight: FontWeight.w900, letterSpacing: -.7)),
+        const SizedBox(height: 10),
+        const Text('Discover trusted businesses, explore services and connect with new opportunities across India.', style: TextStyle(color: Color(0xFFD6E8E0), fontSize: 13, height: 1.5)),
+        const SizedBox(height: 18),
+        const Row(children: [_HeroMetric(value: '01', label: 'Discover'), SizedBox(width: 22), _HeroMetric(value: '02', label: 'Connect'), SizedBox(width: 22), _HeroMetric(value: '03', label: 'Grow')]),
+      ])),
+      const SizedBox(height: 20),
+      Container(padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(22), border: Border.all(color: const Color(0xFFE4EBE6)), boxShadow: const [BoxShadow(color: Color(0x080B2920), blurRadius: 16, offset: Offset(0, 5))]), child: Column(children: [
+        TextField(controller: search, textInputAction: TextInputAction.search, onSubmitted: (_) => find(), decoration: InputDecoration(
+          hintText: 'What are you looking for?', prefixIcon: const Icon(Icons.search_rounded, size: 23),
+          suffixIcon: IconButton(onPressed: find, icon: const Icon(Icons.arrow_forward_rounded, color: green)),
+          filled: true, fillColor: const Color(0xFFF5F8F6), contentPadding: const EdgeInsets.symmetric(vertical: 15),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: BorderSide.none),
+        )),
+        const SizedBox(height: 10),
+        Row(children: [
+          const Icon(Icons.location_on_outlined, color: green, size: 19), const SizedBox(width: 7),
+          Expanded(child: TextField(controller: city, textInputAction: TextInputAction.search, onSubmitted: (_) => find(), decoration: const InputDecoration(hintText: 'City or location', isDense: true, filled: false, contentPadding: EdgeInsets.symmetric(vertical: 10), border: InputBorder.none))),
+          TextButton(onPressed: find, child: const Text('Search', style: TextStyle(fontWeight: FontWeight.w900))),
+        ]),
+      ])),
+      const SizedBox(height: 27),
+      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+        Text('Explore categories', style: Theme.of(context).textTheme.titleLarge),
+        const Text('DISCOVER', style: TextStyle(fontSize: 10, color: green, fontWeight: FontWeight.w900, letterSpacing: .8)),
+      ]),
+      const SizedBox(height: 13),
+      GridView.builder(shrinkWrap: true, physics: const NeverScrollableScrollPhysics(), itemCount: categories.length,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 4, mainAxisSpacing: 10, crossAxisSpacing: 9, childAspectRatio: .83),
+        itemBuilder: (context, i) {
+          final item = categories[i]; final selected = activeCategory == item.label;
+          return InkWell(borderRadius: BorderRadius.circular(17), onTap: () => chooseCategory(item), child: Container(
+            padding: const EdgeInsets.fromLTRB(5, 12, 5, 9),
+            decoration: BoxDecoration(color: selected ? const Color(0xFFE2F1E9) : Colors.white, borderRadius: BorderRadius.circular(17), border: Border.all(color: selected ? green : const Color(0xFFE7EDE9))),
+            child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+              Container(width: 39, height: 39, decoration: BoxDecoration(color: selected ? Colors.white : const Color(0xFFF0F5F1), borderRadius: BorderRadius.circular(13)), child: Icon(item.icon, color: green, size: 21)),
+              const SizedBox(height: 8), Text(item.label, maxLines: 2, textAlign: TextAlign.center, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10, height: 1.2, color: ink, fontWeight: FontWeight.w800)),
+            ]),
+          ));
+        }),
+      const SizedBox(height: 25),
+      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+        Text('Businesses to discover', style: Theme.of(context).textTheme.titleLarge),
+        Text('${results.length} FOUND', style: const TextStyle(fontSize: 10, color: green, fontWeight: FontWeight.w900, letterSpacing: .7)),
+      ]),
+      const SizedBox(height: 5), const Text('Explore providers and services matching your search.', style: TextStyle(fontSize: 13, color: Color(0xFF718078))),
+      const SizedBox(height: 13),
+      if (loading) const Padding(padding: EdgeInsets.all(28), child: Center(child: CircularProgressIndicator(color: green))),
+      if (error != null) _EmptyPanel(icon: Icons.wifi_off_rounded, title: 'Unable to load businesses', message: error!, action: 'Try again', onTap: find),
+      if (!loading && error == null && results.isEmpty) _EmptyPanel(icon: Icons.storefront_outlined, title: 'Your discovery list is waiting', message: 'No published businesses match this search yet. Try another keyword or location.', action: 'Clear search', onTap: () { search.clear(); city.clear(); setState(() => activeCategory = 'All'); find(); }),
+      if (!loading && error == null) ...results.map((item) => BusinessTile(item: Map<String, dynamic>.from(item as Map))),
+      const SizedBox(height: 12),
+      Container(padding: const EdgeInsets.all(17), decoration: BoxDecoration(color: const Color(0xFFF0F4F1), borderRadius: BorderRadius.circular(19)), child: const Row(children: [
+        Icon(Icons.lightbulb_outline_rounded, color: green, size: 22), SizedBox(width: 11),
+        Expanded(child: Text('Can’t find what you need? Post a requirement and let relevant businesses discover you.', style: TextStyle(color: ink, fontSize: 12, height: 1.4, fontWeight: FontWeight.w600))),
+      ])),
+    ]),
+  );
 }
-
+class _DiscoverCategory {
+  final String label; final IconData icon; final String query;
+  const _DiscoverCategory(this.label, this.icon, this.query);
+}
+class _EmptyPanel extends StatelessWidget {
+  final IconData icon; final String title, message, action; final VoidCallback onTap;
+  const _EmptyPanel({required this.icon, required this.title, required this.message, required this.action, required this.onTap});
+  @override Widget build(BuildContext context) => Container(width: double.infinity, padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 25),
+    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(21), border: Border.all(color: const Color(0xFFE6ECE8))),
+    child: Column(children: [
+      Container(width: 58, height: 58, decoration: const BoxDecoration(color: Color(0xFFE7F2EB), shape: BoxShape.circle), child: Icon(icon, color: green, size: 27)),
+      const SizedBox(height: 13), Text(title, textAlign: TextAlign.center, style: const TextStyle(fontSize: 17, color: ink, fontWeight: FontWeight.w900)),
+      const SizedBox(height: 7), Text(message, textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, color: Color(0xFF718078), height: 1.45)),
+      const SizedBox(height: 13), TextButton(onPressed: onTap, child: Text(action, style: const TextStyle(color: green, fontWeight: FontWeight.w900))),
+    ]),
+  );
+}
 class _HeroMetric extends StatelessWidget {
   final String value, label;
   const _HeroMetric({required this.value, required this.label});
   @override Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-    Text(value, style: const TextStyle(color: Color(0xFFE7C987), fontSize: 15, fontWeight: FontWeight.w900)),
-    const SizedBox(height: 3), Text(label, style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w600)),
+    Text(value, style: const TextStyle(color: Color(0xFFE7C987), fontSize: 14, fontWeight: FontWeight.w900)),
+    const SizedBox(height: 3), Text(label, style: const TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.w700)),
   ]);
 }
-
 class BusinessTile extends StatelessWidget {
-  final Map<String, dynamic> item; const BusinessTile({super.key, required this.item});
+  final Map<String, dynamic> item;
+  const BusinessTile({super.key, required this.item});
   @override Widget build(BuildContext context) {
     final title = item['display_name'] ?? item['name'] ?? item['legal_name'] ?? 'Business';
-    final desc = item['description'] ?? 'Business profile';
-    return Container(
-      margin: const EdgeInsets.only(bottom: 11), padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(21), border: Border.all(color: const Color(0xFFE5ECE7))),
+    final desc = item['description'] ?? 'Discover this business and its services.';
+    final city = item['city']?.toString(), state = item['state']?.toString();
+    return Container(margin: const EdgeInsets.only(bottom: 11), padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFFE5ECE7))),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Container(width: 55, height: 55, decoration: BoxDecoration(color: const Color(0xFFE5F2EB), borderRadius: BorderRadius.circular(17)), child: const Icon(Icons.storefront_rounded, color: green, size: 27)),
-        const SizedBox(width: 14), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('$title', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: ink)),
-          const SizedBox(height: 5), Text('$desc', maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, height: 1.4, color: Color(0xFF718078))),
-          if (item['city'] != null) Padding(padding: const EdgeInsets.only(top: 9), child: Row(children: [
-            const Icon(Icons.location_on_outlined, size: 15, color: green), const SizedBox(width: 3),
-            Text(item['city'].toString(), style: const TextStyle(fontSize: 12, color: green, fontWeight: FontWeight.w800)),
+        Container(width: 54, height: 54, decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFFE6F3EB), Color(0xFFF4F7F4)]), borderRadius: BorderRadius.circular(16)), child: const Icon(Icons.storefront_rounded, color: green, size: 26)),
+        const SizedBox(width: 13), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('$title', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: ink)),
+          const SizedBox(height: 5), Text('$desc', maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, height: 1.4, color: Color(0xFF718078))),
+          if ((city ?? '').isNotEmpty || (state ?? '').isNotEmpty) Padding(padding: const EdgeInsets.only(top: 9), child: Row(children: [
+            const Icon(Icons.location_on_outlined, size: 14, color: green), const SizedBox(width: 3),
+            Expanded(child: Text([city, state].where((v) => v != null && v.isNotEmpty).join(', '), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, color: green, fontWeight: FontWeight.w800))),
           ])),
         ])),
-        const Icon(Icons.arrow_forward_ios_rounded, size: 15, color: Color(0xFF718078)),
+        const SizedBox(width: 5), const Icon(Icons.arrow_forward_ios_rounded, size: 13, color: Color(0xFF9AA69F)),
       ]),
     );
   }
@@ -212,7 +303,7 @@ class _RequirementsScreenState extends State<RequirementsScreen> {
     final ok = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(title: const Text('Post a requirement'), content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [TextField(controller: title, decoration: const InputDecoration(labelText: 'What do you need?')), const SizedBox(height: 10), TextField(controller: desc, maxLines: 3, decoration: const InputDecoration(labelText: 'Details')), const SizedBox(height: 10), TextField(controller: city, decoration: const InputDecoration(labelText: 'City')), const SizedBox(height: 10), TextField(controller: state, decoration: const InputDecoration(labelText: 'State'))])), actions: [TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')), FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Post'))]));
     if (ok != true || title.text.trim().isEmpty) return;
     try { await supabase.rpc('create_requirement_and_match', params: {'p_title': title.text.trim(), 'p_description': desc.text.trim(), 'p_requirement_type': 'other', 'p_category_id': null, 'p_city': city.text.trim().isEmpty ? null : city.text.trim(), 'p_state': state.text.trim().isEmpty ? null : state.text.trim()}); await load(); if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Requirement posted successfully'))); }
-    catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Requirement post nahi hua. Please details check karein.'))); }
+    catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Your requirement could not be posted. Please check the details and try again.'))); }
   }
   @override
   Widget build(BuildContext context) {
