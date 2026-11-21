@@ -597,10 +597,17 @@ class _OpportunitiesScreenState extends State<OpportunitiesScreen> {
   Future<void> load() async {
     setState(() => loading = true);
     try {
-      final r = await supabase.from('leads').select('id,subject,message,status,created_at,companies(display_name)').order('created_at', ascending: false);
+      final r = await supabase.from('leads').select('id,subject,message,status,created_at,companies(display_name),quotations(status)').order('created_at', ascending: false);
       if (mounted) setState(() => rows = r);
     } catch (_) {}
     if (mounted) setState(() => loading = false);
+  }
+  String _displayStatus(Map<String, dynamic> lead) {
+    final quotes = lead['quotations'] is List ? lead['quotations'] as List : const [];
+    final statuses = quotes.map((q) => (q['status'] ?? '').toString().toLowerCase()).toList();
+    if (statuses.contains('accepted')) return 'accepted';
+    if (statuses.isNotEmpty && statuses.every((s) => s == 'rejected')) return 'rejected';
+    return (lead['status'] ?? 'new').toString();
   }
   @override void initState() { super.initState(); load(); }
   Future<void> sendQuote(Map<String, dynamic> lead) async {
@@ -701,7 +708,7 @@ class _OpportunitiesScreenState extends State<OpportunitiesScreen> {
   }
 
   @override Widget build(BuildContext context) {
-    final visible = filter == 'All' ? rows : rows.where((r) => (r['status'] ?? 'new').toString().toLowerCase() == filter.toLowerCase()).toList();
+    final visible = filter == 'All' ? rows : rows.where((r) => _displayStatus(Map<String, dynamic>.from(r)).toLowerCase() == filter.toLowerCase()).toList();
     return loading ? const Center(child: CircularProgressIndicator(color: green))
       : RefreshIndicator(color: green, onRefresh: load, child: ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 25), children: [
         const _SectionHeading(kicker: 'BUSINESS WORKSPACE', title: 'Opportunity desk', subtitle: 'Review incoming enquiries and matching requests.'),
@@ -734,7 +741,7 @@ class _OpportunitiesScreenState extends State<OpportunitiesScreen> {
                 Text(r['subject'] ?? 'Business opportunity', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, color: ink, fontWeight: FontWeight.w900)),
                 const SizedBox(height: 4), Text(company?.toString() ?? 'DISCOVERLY network', style: const TextStyle(fontSize: 11, color: Color(0xFF718078))),
               ])),
-              const SizedBox(width: 6), _StatusPill(status: (r['status'] ?? 'new').toString()), const Icon(Icons.chevron_right_rounded, color: Color(0xFF9AA69F)),
+              const SizedBox(width: 6), _StatusPill(status: _displayStatus(Map<String, dynamic>.from(r))), const Icon(Icons.chevron_right_rounded, color: Color(0xFF9AA69F)),
             ])),
           ));
         }),
