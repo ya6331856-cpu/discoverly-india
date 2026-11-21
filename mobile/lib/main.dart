@@ -458,6 +458,69 @@ class _RequirementsScreenState extends State<RequirementsScreen> {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Your request has been published.')));
     }
   }
+  Future<void> showDetails(Map<String, dynamic> requirement) async {
+    List<dynamic> leads = [];
+    try {
+      leads = await supabase.from('leads')
+        .select('id,subject,status,quotations(id,amount,currency,details,status,valid_until,created_at,companies(display_name))')
+        .eq('requirement_id', requirement['id'])
+        .order('created_at', ascending: false);
+    } catch (_) {}
+    if (!mounted) return;
+    final quotes = <Map<String, dynamic>>[];
+    for (final lead in leads) {
+      if (lead['quotations'] is List) {
+        for (final q in (lead['quotations'] as List)) {
+          quotes.add({...Map<String, dynamic>.from(q as Map), 'lead_subject': lead['subject']});
+        }
+      }
+    }
+    await showModalBottomSheet(context: context, showDragHandle: true, useSafeArea: true,
+      isScrollControlled: true, shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(27))),
+      builder: (sheetContext) => DraggableScrollableSheet(
+        expand: false, initialChildSize: .68, minChildSize: .4, maxChildSize: .92,
+        builder: (_, controller) => ListView(controller: controller, padding: const EdgeInsets.fromLTRB(20, 8, 20, 28), children: [
+          Text(requirement['title'] ?? 'Requirement', style: const TextStyle(fontSize: 22, color: ink, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 7),
+          Text(requirement['description'] ?? 'No additional details provided.', style: const TextStyle(fontSize: 13, height: 1.45, color: Color(0xFF65736B))),
+          const SizedBox(height: 18),
+          Row(children: [const Expanded(child: Text('Business quotations', style: TextStyle(fontSize: 16, color: ink, fontWeight: FontWeight.w900))), Text(quotes.length.toString(), style: const TextStyle(fontSize: 12, color: green, fontWeight: FontWeight.w900))]),
+          const SizedBox(height: 10),
+          if (quotes.isEmpty) Container(padding: const EdgeInsets.all(17), decoration: BoxDecoration(color: const Color(0xFFF7F9F7), borderRadius: BorderRadius.circular(15)), child: const Text('No quotations yet. Business responses will appear here.', style: TextStyle(fontSize: 13, color: Color(0xFF718078)))),
+          ...quotes.map((q) {
+            final company = q['companies'] is Map ? q['companies']['display_name'] : null;
+            final status = (q['status'] ?? 'sent').toString();
+            return Container(margin: const EdgeInsets.only(bottom: 10), padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: const Color(0xFFF7F9F7), borderRadius: BorderRadius.circular(17), border: Border.all(color: const Color(0xFFE4EBE6))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(children: [Expanded(child: Text(company?.toString() ?? 'Business quotation', style: const TextStyle(fontSize: 14, color: ink, fontWeight: FontWeight.w900))), _StatusPill(status: status)]),
+              const SizedBox(height: 7), Text('₹ ' + (q['amount'] ?? '0').toString(), style: const TextStyle(fontSize: 21, color: green, fontWeight: FontWeight.w900)),
+              const SizedBox(height: 6), Text(q['details'] ?? '', style: const TextStyle(fontSize: 12, height: 1.4, color: Color(0xFF65736B))),
+              if (status == 'sent') ...[
+                const SizedBox(height: 12),
+                Row(children: [
+                  Expanded(child: OutlinedButton(onPressed: () { Navigator.pop(sheetContext); respondToQuote(q['id'].toString(), 'rejected'); }, child: const Text('Decline'))),
+                  const SizedBox(width: 9),
+                  Expanded(child: FilledButton(onPressed: () { Navigator.pop(sheetContext); respondToQuote(q['id'].toString(), 'accepted'); }, child: const Text('Accept quote'))),
+                ]),
+              ],
+            ]));
+          }),
+        ]),
+      ),
+    );
+  }
+
+  Future<void> respondToQuote(String quoteId, String status) async {
+    try {
+      final result = await supabase.from('quotations').update({'status': status})
+        .eq('id', quoteId).eq('status', 'sent').select('id').maybeSingle();
+      if (result == null) throw Exception('Quotation is no longer available');
+      await load();
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(status == 'accepted' ? 'Quotation accepted.' : 'Quotation declined.')));
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not update this quotation. Please refresh and try again.')));
+    }
+  }
+
   @override Widget build(BuildContext context) => Scaffold(
     backgroundColor: Colors.transparent,
     floatingActionButton: FloatingActionButton.extended(onPressed: add, backgroundColor: green, foregroundColor: Colors.white, icon: const Icon(Icons.add_rounded), label: const Text('New request', style: TextStyle(fontWeight: FontWeight.w800))),
@@ -583,18 +646,8 @@ class _OpportunitiesScreenState extends State<OpportunitiesScreen> {
           final company = r['companies'] is Map ? r['companies']['display_name'] : null;
           return Material(color: Colors.white, borderRadius: BorderRadius.circular(17), child: InkWell(
             borderRadius: BorderRadius.circular(17),
-            onTap: () => showModalBottomSheet(context: context, showDragHandle: true, useSafeArea: true,
-              shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(26))),
-              builder: (_) => Padding(padding: const EdgeInsets.fromLTRB(20, 8, 20, 28), child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Row(children: [Expanded(child: Text(r['subject'] ?? 'Business opportunity', style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w900, color: ink))), _StatusPill(status: (r['status'] ?? 'new').toString())]),
-                const SizedBox(height: 8), Text(company?.toString() ?? 'DISCOVERLY network', style: const TextStyle(fontSize: 12, color: green, fontWeight: FontWeight.w800)),
-                const SizedBox(height: 15), Text(r['message'] ?? 'No additional details provided.', style: const TextStyle(fontSize: 14, height: 1.5, color: Color(0xFF59675F))),
-                const SizedBox(height: 15), const Text('Review the enquiry details and prepare a commercial response.', style: TextStyle(fontSize: 12, color: Color(0xFF718078), height: 1.4)),
-                if (['new', 'contacted', 'quoted'].contains((r['status'] ?? 'new').toString().toLowerCase())) ...[
-                  const SizedBox(height: 17), SizedBox(width: double.infinity, child: FilledButton.icon(onPressed: () { Navigator.pop(context); sendQuote(Map<String, dynamic>.from(r)); }, icon: const Icon(Icons.request_quote_outlined), label: const Text('Send quotation'))),
-                ],
-              ]))),
-            child: Padding(padding: const EdgeInsets.all(14), child: Row(children: [
+            onTap: () => showDetails(Map<String, dynamic>.from(r)),
+              child: Padding(padding: const EdgeInsets.all(14), child: Row(children: [
               Container(width: 44, height: 44, decoration: BoxDecoration(color: const Color(0xFFEAF2EC), borderRadius: BorderRadius.circular(14)), child: const Icon(Icons.bolt_rounded, color: green, size: 22)),
               const SizedBox(width: 12), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 Text(r['subject'] ?? 'Business opportunity', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, color: ink, fontWeight: FontWeight.w900)),
