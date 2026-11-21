@@ -511,6 +511,29 @@ class ProfileScreen extends StatelessWidget {
     ]);
   }
 }
+class _ProfileTile extends StatelessWidget {
+  final IconData icon;
+  final String title, subtitle;
+  final VoidCallback? onTap;
+  const _ProfileTile({required this.icon, required this.title, required this.subtitle, this.onTap});
+  @override Widget build(BuildContext context) => Material(
+    color: Colors.white, borderRadius: BorderRadius.circular(16),
+    child: InkWell(onTap: onTap, borderRadius: BorderRadius.circular(16), child: Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE5ECE7))),
+      child: Row(children: [
+        Container(width: 40, height: 40, decoration: BoxDecoration(color: const Color(0xFFEAF2EC), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: green, size: 20)),
+        const SizedBox(width: 11),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: ink)),
+          const SizedBox(height: 3), Text(subtitle, style: const TextStyle(fontSize: 10, color: Color(0xFF718078))),
+        ])),
+        const Icon(Icons.chevron_right_rounded, color: Color(0xFF8C9991), size: 19),
+      ]),
+    )),
+  );
+}
+
 class NotificationsScreen extends StatefulWidget { const NotificationsScreen({super.key}); @override State<NotificationsScreen> createState() => _NotificationsScreenState(); }
 class _NotificationsScreenState extends State<NotificationsScreen> {
   List<dynamic> rows = []; bool loading = true;
