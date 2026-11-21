@@ -511,6 +511,51 @@ class _OpportunitiesScreenState extends State<OpportunitiesScreen> {
     if (mounted) setState(() => loading = false);
   }
   @override void initState() { super.initState(); load(); }
+  Future<void> sendQuote(Map<String, dynamic> lead) async {
+    final amount = TextEditingController();
+    final details = TextEditingController();
+    var sending = false;
+    final sent = await showModalBottomSheet<bool>(
+      context: context, isScrollControlled: true, useSafeArea: true, showDragHandle: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(27))),
+      builder: (ctx) => StatefulBuilder(builder: (ctx, refresh) => Padding(
+        padding: EdgeInsets.fromLTRB(20, 8, 20, MediaQuery.of(ctx).viewInsets.bottom + 22),
+        child: SingleChildScrollView(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
+          const Text('Send a quotation', style: TextStyle(fontSize: 22, color: ink, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 5), const Text('Your quote will be shared with the customer.', style: TextStyle(fontSize: 12, color: Color(0xFF718078))),
+          const SizedBox(height: 18),
+          TextField(controller: amount, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: const InputDecoration(labelText: 'Quotation amount (INR)', prefixText: '₹ ')),
+          const SizedBox(height: 12),
+          TextField(controller: details, maxLines: 4, textCapitalization: TextCapitalization.sentences, decoration: const InputDecoration(labelText: 'Scope, inclusions and terms', alignLabelWithHint: true)),
+          const SizedBox(height: 17),
+          FilledButton(onPressed: sending ? null : () async {
+            final value = double.tryParse(amount.text.trim());
+            if (value == null || value < 0 || details.text.trim().isEmpty) {
+              ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('Enter a valid amount and quotation details.')));
+              return;
+            }
+            refresh(() => sending = true);
+            try {
+              await supabase.rpc('submit_business_quotation', params: {
+                'p_lead_id': lead['id'], 'p_amount': value, 'p_details': details.text.trim(),
+                'p_valid_until': DateTime.now().add(const Duration(days: 14)).toUtc().toIso8601String(),
+              });
+              if (ctx.mounted) Navigator.pop(ctx, true);
+            } catch (_) {
+              refresh(() => sending = false);
+              if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('Quotation could not be sent. Check that this lead is open and belongs to your business.')));
+            }
+          }, child: sending ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Send quotation')),
+        ])),
+      )),
+    );
+    amount.dispose(); details.dispose();
+    if (sent == true) {
+      await load();
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Quotation sent successfully.')));
+    }
+  }
   @override Widget build(BuildContext context) {
     final visible = filter == 'All' ? rows : rows.where((r) => (r['status'] ?? 'new').toString().toLowerCase() == filter.toLowerCase()).toList();
     return loading ? const Center(child: CircularProgressIndicator(color: green))
@@ -544,7 +589,10 @@ class _OpportunitiesScreenState extends State<OpportunitiesScreen> {
                 Row(children: [Expanded(child: Text(r['subject'] ?? 'Business opportunity', style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w900, color: ink))), _StatusPill(status: (r['status'] ?? 'new').toString())]),
                 const SizedBox(height: 8), Text(company?.toString() ?? 'DISCOVERLY network', style: const TextStyle(fontSize: 12, color: green, fontWeight: FontWeight.w800)),
                 const SizedBox(height: 15), Text(r['message'] ?? 'No additional details provided.', style: const TextStyle(fontSize: 14, height: 1.5, color: Color(0xFF59675F))),
-                const SizedBox(height: 15), const Text('Review this enquiry and respond through the quotation workflow when it is enabled for your account.', style: TextStyle(fontSize: 12, color: Color(0xFF718078), height: 1.4)),
+                const SizedBox(height: 15), const Text('Review the enquiry details and prepare a commercial response.', style: TextStyle(fontSize: 12, color: Color(0xFF718078), height: 1.4)),
+                if (['new', 'contacted', 'quoted'].contains((r['status'] ?? 'new').toString().toLowerCase())) ...[
+                  const SizedBox(height: 17), SizedBox(width: double.infinity, child: FilledButton.icon(onPressed: () { Navigator.pop(context); sendQuote(Map<String, dynamic>.from(r)); }, icon: const Icon(Icons.request_quote_outlined), label: const Text('Send quotation'))),
+                ],
               ]))),
             child: Padding(padding: const EdgeInsets.all(14), child: Row(children: [
               Container(width: 44, height: 44, decoration: BoxDecoration(color: const Color(0xFFEAF2EC), borderRadius: BorderRadius.circular(14)), child: const Icon(Icons.bolt_rounded, color: green, size: 22)),
