@@ -110,21 +110,49 @@ class _MainShellState extends State<MainShell> {
   int index = 0;
   final pages = const [DiscoverScreen(), RequirementsScreen(), OpportunitiesScreen(), ProfileScreen()];
   @override Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Row(children: [
-      Container(width: 39, height: 39, decoration: BoxDecoration(gradient: const LinearGradient(colors: [green, Color(0xFF123F32)]), borderRadius: BorderRadius.circular(13)), child: const Icon(Icons.travel_explore_rounded, color: Colors.white, size: 22)),
-      const SizedBox(width: 11), const Text('DISCOVERLY', style: TextStyle(letterSpacing: .5)),
-    ]), actions: [
-      IconButton(style: IconButton.styleFrom(backgroundColor: Colors.white, side: const BorderSide(color: Color(0xFFE5ECE7))), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen())), icon: const Icon(Icons.notifications_none_rounded, size: 24)),
-      const SizedBox(width: 13),
-    ]),
+    appBar: AppBar(
+      titleSpacing: 18,
+      title: Row(children: [
+        Container(width: 37, height: 37, decoration: BoxDecoration(gradient: const LinearGradient(colors: [green, Color(0xFF123F32)]), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.travel_explore_rounded, color: Colors.white, size: 21)),
+        const SizedBox(width: 10), const Text('DISCOVERLY', style: TextStyle(letterSpacing: .7, fontSize: 18)),
+      ]),
+      actions: [
+        IconButton(
+          style: IconButton.styleFrom(backgroundColor: Colors.white, side: const BorderSide(color: Color(0xFFE5ECE7))),
+          onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen())),
+          icon: const Icon(Icons.notifications_none_rounded, size: 23),
+        ),
+        const SizedBox(width: 14),
+      ],
+    ),
     body: IndexedStack(index: index, children: pages),
-    bottomNavigationBar: NavigationBar(height: 76, selectedIndex: index, labelBehavior: NavigationDestinationLabelBehavior.alwaysShow, onDestinationSelected: (v) => setState(() => index = v), destinations: const [
-      NavigationDestination(icon: Icon(Icons.explore_outlined), selectedIcon: Icon(Icons.explore_rounded), label: 'Discover'),
-      NavigationDestination(icon: Icon(Icons.assignment_outlined), selectedIcon: Icon(Icons.assignment_rounded), label: 'Requests'),
-      NavigationDestination(icon: Icon(Icons.work_outline_rounded), selectedIcon: Icon(Icons.work_rounded), label: 'Leads'),
-      NavigationDestination(icon: Icon(Icons.person_outline_rounded), selectedIcon: Icon(Icons.person_rounded), label: 'Profile'),
-    ]),
+    bottomNavigationBar: SafeArea(top: false, child: Container(
+      margin: const EdgeInsets.fromLTRB(14, 5, 14, 10), padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 7),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(23), border: Border.all(color: const Color(0xFFE4EBE6)), boxShadow: const [BoxShadow(color: Color(0x120B2920), blurRadius: 20, offset: Offset(0, 6))]),
+      child: Row(children: [
+        _NavItem(icon: Icons.explore_outlined, activeIcon: Icons.explore_rounded, label: 'Discover', selected: index == 0, onTap: () => setState(() => index = 0)),
+        _NavItem(icon: Icons.assignment_outlined, activeIcon: Icons.assignment_rounded, label: 'Requests', selected: index == 1, onTap: () => setState(() => index = 1)),
+        _NavItem(icon: Icons.work_outline_rounded, activeIcon: Icons.work_rounded, label: 'Leads', selected: index == 2, onTap: () => setState(() => index = 2)),
+        _NavItem(icon: Icons.person_outline_rounded, activeIcon: Icons.person_rounded, label: 'Profile', selected: index == 3, onTap: () => setState(() => index = 3)),
+      ]),
+    )),
   );
+}
+
+class _NavItem extends StatelessWidget {
+  final IconData icon, activeIcon; final String label; final bool selected; final VoidCallback onTap;
+  const _NavItem({required this.icon, required this.activeIcon, required this.label, required this.selected, required this.onTap});
+  @override Widget build(BuildContext context) => Expanded(child: InkWell(
+    onTap: onTap, borderRadius: BorderRadius.circular(17),
+    child: AnimatedContainer(duration: const Duration(milliseconds: 180), padding: const EdgeInsets.symmetric(vertical: 9),
+      decoration: BoxDecoration(color: selected ? const Color(0xFFE6F2EB) : Colors.transparent, borderRadius: BorderRadius.circular(17)),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Icon(selected ? activeIcon : icon, size: 21, color: selected ? green : const Color(0xFF829088)),
+        const SizedBox(height: 4),
+        Text(label, style: TextStyle(fontSize: 10, fontWeight: selected ? FontWeight.w900 : FontWeight.w600, color: selected ? green : const Color(0xFF829088))),
+      ]),
+    ),
+  ));
 }
 
 class DiscoverScreen extends StatefulWidget {
