@@ -22,9 +22,7 @@ export default function ManageBusinessPage(){
   const [error,setError]=useState("");
   const [notice,setNotice]=useState("");
   const [company,setCompany]=useState<Company|null>(null);
-  const [profile,setProfile]=useState<Profile|null>(null);
   const [categories,setCategories]=useState<Category[]>([]);
-  const [companyCategories,setCompanyCategories]=useState<RoleCategory[]>([]);
   const [legalName,setLegalName]=useState("");
   const [displayName,setDisplayName]=useState("");
   const [entityType,setEntityType]=useState("Proprietorship");
@@ -58,7 +56,7 @@ export default function ManageBusinessPage(){
       if(co.error||!co.data){setError(co.error?.message||"Business not found or you do not have permission to manage it.");setLoading(false);return;}
       const c=co.data as Company; const p=(pr.data??null) as Profile|null; const l=loc.data as Location|null;
       const rel=(cc.data??[]) as RoleCategory[]; const all=(cats.data??[]) as Category[];
-      setUserId(user.id);setCompany(c);setProfile(p);setCategories(all);setCompanyCategories(rel);
+      setUserId(user.id);setCompany(c);setCategories(all);
       setLegalName(c.legal_name);setDisplayName(c.display_name);setEntityType(c.entity_type||"Other");setDescription(c.description||"");
       setWebsite(c.website_url||"");setTagline(p?.tagline||"");setEmail(p?.public_email||"");setPhone(p?.public_phone||"");
       setCity(l?.city||"");setStateName(l?.state||"");setLogoPath(p?.logo_path||"");
