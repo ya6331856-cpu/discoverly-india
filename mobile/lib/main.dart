@@ -448,18 +448,38 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Future<void> load() async { try { final r = await supabase.from('notifications').select('id,title,body,created_at,read_at').order('created_at', ascending: false).limit(50); if (mounted) setState(() => rows = r); } catch (_) {} if (mounted) setState(() => loading = false); }
   @override
   Widget build(BuildContext context) {
-    final children = rows.map((r) => ListTile(
-      leading: const Icon(Icons.notifications_active_outlined, color: green),
-      title: Text(r['title'] ?? ''),
-      subtitle: Text(r['body'] ?? ''),
-    )).toList();
     return Scaffold(
+      backgroundColor: canvas,
       appBar: AppBar(title: const Text('Notifications')),
       body: loading
-          ? const Center(child: CircularProgressIndicator())
-          : rows.isEmpty
-              ? const Center(child: Text('No notifications yet'))
-              : ListView(children: children),
+        ? const Center(child: CircularProgressIndicator(color: green))
+        : rows.isEmpty
+          ? ListView(padding: const EdgeInsets.all(22), children: const [
+              SizedBox(height: 18),
+              Text('STAY IN THE LOOP', style: TextStyle(fontSize: 10, color: green, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
+              SizedBox(height: 8), Text('All caught up.', style: TextStyle(fontSize: 30, color: ink, fontWeight: FontWeight.w900)),
+              SizedBox(height: 7), Text('Important updates about your account and activity will appear here.', style: TextStyle(fontSize: 14, color: Color(0xFF718078), height: 1.45)),
+              SizedBox(height: 65), Icon(Icons.notifications_none_rounded, size: 62, color: green),
+              SizedBox(height: 15), Center(child: Text('No notifications yet', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: ink))),
+              SizedBox(height: 6), Center(child: Text('We will let you know when something needs your attention.', textAlign: TextAlign.center, style: TextStyle(fontSize: 13, color: Color(0xFF718078), height: 1.4))),
+            ])
+          : ListView(padding: const EdgeInsets.fromLTRB(18, 14, 18, 25), children: [
+              const Text('UPDATES', style: TextStyle(fontSize: 10, color: green, fontWeight: FontWeight.w900, letterSpacing: 1.2)),
+              const SizedBox(height: 7), const Text('Your notifications', style: TextStyle(fontSize: 28, color: ink, fontWeight: FontWeight.w900)),
+              const SizedBox(height: 17),
+              ...rows.map((r) => Container(
+                margin: const EdgeInsets.only(bottom: 10), padding: const EdgeInsets.all(15),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: const Color(0xFFE5ECE7))),
+                child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Container(width: 43, height: 43, decoration: BoxDecoration(color: const Color(0xFFE7F2EB), borderRadius: BorderRadius.circular(14)), child: const Icon(Icons.notifications_active_outlined, color: green)),
+                  const SizedBox(width: 12), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(r['title'] ?? 'Update', style: const TextStyle(fontSize: 15, color: ink, fontWeight: FontWeight.w900)),
+                    const SizedBox(height: 5), Text(r['body'] ?? '', style: const TextStyle(fontSize: 13, color: Color(0xFF718078), height: 1.4)),
+                  ])),
+                  if (r['read_at'] == null) Container(width: 7, height: 7, decoration: const BoxDecoration(color: green, shape: BoxShape.circle)),
+                ]),
+              )),
+            ]),
     );
   }
 }
