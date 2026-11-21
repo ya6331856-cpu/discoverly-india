@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import {useEffect,useMemo,useState} from "react";
 import {useRouter} from "next/navigation";
 import {createClient} from "@/lib/supabase/client";
@@ -52,7 +53,7 @@ export default function BusinessRegisterPage(){
   const sb=createClient();if(!sb){setError("Supabase configuration is missing.");return;}
   setSaving(true);
   const slugBase=displayName.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,48)||"business";
-  const {data,error:saveError}=await sb.rpc("create_business_profile",{
+  const {error:saveError}=await sb.rpc("create_business_profile",{
    p_legal_name:legalName.trim(),
    p_display_name:displayName.trim(),
    p_slug:slugBase+"-"+crypto.randomUUID().slice(0,6),
@@ -75,12 +76,12 @@ export default function BusinessRegisterPage(){
  if(loading)return <main className="registerShell"><p className="loadingText">Preparing your business registration…</p></main>;
 
  return <main className="registerShell">
-  <header className="registerNav"><a className="brand" href="/">D<span>.</span> &nbsp; DISCOVERLY</a><a href="/">Back to discovery ↗</a></header>
+  <header className="registerNav"><Link className="brand" href="/">D<span>.</span> &nbsp; DISCOVERLY</Link><Link href="/">Back to discovery ↗</Link></header>
   <section className="registerIntro"><small className="eyebrow">BUSINESS ONBOARDING · INDIA</small><h1>Put your business<br/>on the <em>map.</em></h1><p>Create a business profile to help customers, buyers and partners discover what you offer.</p></section>
   <section className="registerCard">
    <div className="formHeader"><div><small className="eyebrow">STEP 1 · BASIC DETAILS</small><h2>Tell us about your business</h2></div><span>DRAFT PROFILE</span></div>
    {error&&<p className="formError" role="alert">{error}</p>}
-   {success?<div className="formSuccess"><span>✓</span><h3>Business profile created</h3><p>{success}</p><a href="/account">Open my account ↗</a></div>:
+   {success?<div className="formSuccess"><span>✓</span><h3>Business profile created</h3><p>{success}</p><Link href="/account">Open my account ↗</Link></div>:
    <form onSubmit={submit} className="businessForm">
     <div className="fieldGrid">
      <label>Public business name *<input required maxLength={120} value={displayName} onChange={e=>setDisplayName(e.target.value)} placeholder="e.g. Sunrise Engineering"/></label>
