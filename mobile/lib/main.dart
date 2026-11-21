@@ -74,29 +74,51 @@ class _AuthScreenState extends State<AuthScreen> {
   }
   @override void dispose() { email.dispose(); password.dispose(); name.dispose(); super.dispose(); }
   @override Widget build(BuildContext context) => Scaffold(
-    backgroundColor: const Color(0xFFF4F7F4),
+    backgroundColor: const Color(0xFFF3F6F3),
     body: SafeArea(child: Center(child: SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 460), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Container(padding: const EdgeInsets.all(25), decoration: BoxDecoration(
-          gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [ink, Color(0xFF123F32), green]),
-          borderRadius: BorderRadius.circular(29), boxShadow: const [BoxShadow(color: Color(0x260C3D31), blurRadius: 24, offset: Offset(0, 12))],
-        ), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [Container(width: 46, height: 46, decoration: BoxDecoration(color: Colors.white.withValues(alpha: .14), borderRadius: BorderRadius.circular(15)), child: const Icon(Icons.travel_explore_rounded, color: Colors.white, size: 26)), const SizedBox(width: 12), const Text('DISCOVERLY', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 21, letterSpacing: 1))]),
-          const SizedBox(height: 35), Text(signup ? 'Start your\nnext connection.' : 'Discover the\nright connections.', style: const TextStyle(color: Colors.white, fontSize: 32, height: 1.12, fontWeight: FontWeight.w900, letterSpacing: -.8)),
-          const SizedBox(height: 12), const Text('India’s business discovery network. Find services, meet businesses and unlock opportunities.', style: TextStyle(color: Color(0xFFD9E9E1), fontSize: 15, height: 1.5)),
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+      child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 440), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Container(height: 176, clipBehavior: Clip.antiAlias, decoration: BoxDecoration(
+          gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF0B211C), Color(0xFF0E4B39), Color(0xFF087E63)]),
+          borderRadius: BorderRadius.circular(23),
+        ), child: Stack(children: [
+          Positioned(right: -45, top: -90, child: Container(width: 230, height: 230, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.white.withValues(alpha: .09), width: 24)))),
+          Positioned(right: 34, top: 23, child: Container(width: 95, height: 95, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: const Color(0x66E7C987), width: 1.2)))),
+          Padding(padding: const EdgeInsets.all(19), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              Container(width: 38, height: 38, decoration: BoxDecoration(color: Colors.white.withValues(alpha: .13), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.travel_explore_rounded, color: Colors.white, size: 22)),
+              const SizedBox(width: 10), const Text('DISCOVERLY', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 17, letterSpacing: .8)),
+              const Spacer(), const Icon(Icons.auto_awesome_rounded, color: Color(0xFFE7C987), size: 19),
+            ]),
+            const Spacer(),
+            Text(signup ? 'Create meaningful connections.' : 'A better way to connect.', style: const TextStyle(color: Colors.white, fontSize: 21, height: 1.15, fontWeight: FontWeight.w900, letterSpacing: -.4)),
+            const SizedBox(height: 6),
+            const Text('India’s discovery network for businesses, services and opportunities.', style: TextStyle(color: Color(0xFFD5E7DF), fontSize: 10, height: 1.4)),
+          ])),
         ])),
-        const SizedBox(height: 28), Text(signup ? 'Create your account' : 'Welcome back', style: Theme.of(context).textTheme.headlineMedium),
-        const SizedBox(height: 6), Text(signup ? 'Start discovering possibilities around you.' : 'Sign in to continue to your network.', style: Theme.of(context).textTheme.bodyMedium),
-        const SizedBox(height: 22),
-        if (signup) ...[TextField(controller: name, decoration: const InputDecoration(labelText: 'Full name', prefixIcon: Icon(Icons.person_outline))), const SizedBox(height: 12)],
-        TextField(controller: email, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'Email address', prefixIcon: Icon(Icons.mail_outline))),
-        const SizedBox(height: 12), TextField(controller: password, obscureText: true, decoration: const InputDecoration(labelText: 'Password', prefixIcon: Icon(Icons.lock_outline))),
-        if (error != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(error!, style: const TextStyle(color: Colors.red))),
-        if (notice != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(notice!, style: const TextStyle(color: green))),
-        const SizedBox(height: 18), FilledButton(onPressed: busy ? null : submit, child: Text(busy ? 'Please wait...' : signup ? 'Create account' : 'Sign in')),
-        const SizedBox(height: 9), OutlinedButton(onPressed: () => setState(() { signup = !signup; error = null; notice = null; }), style: OutlinedButton.styleFrom(minimumSize: const Size(0, 52), side: const BorderSide(color: Color(0xFFE5ECE7)), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))), child: Text(signup ? 'I already have an account' : 'Create a new account', style: const TextStyle(color: ink, fontWeight: FontWeight.w800))),
-        const SizedBox(height: 22), const Center(child: Text('SECURE AUTHENTICATION  •  SUPABASE', style: TextStyle(color: Color(0xFF718078), fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: .8))),
+        const SizedBox(height: 19),
+        Container(padding: const EdgeInsets.all(18), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(21), border: Border.all(color: const Color(0xFFE4EBE6)), boxShadow: const [BoxShadow(color: Color(0x090B2920), blurRadius: 18, offset: Offset(0, 6))]), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Text(signup ? 'Create your account' : 'Welcome back', style: const TextStyle(fontSize: 19, color: ink, fontWeight: FontWeight.w900, letterSpacing: -.3)),
+          const SizedBox(height: 4), Text(signup ? 'A few details to get you started.' : 'Sign in to continue to your network.', style: const TextStyle(fontSize: 11, color: Color(0xFF718078))),
+          const SizedBox(height: 17),
+          if (signup) ...[TextField(controller: name, decoration: const InputDecoration(labelText: 'Full name', prefixIcon: Icon(Icons.person_outline))), const SizedBox(height: 10)],
+          TextField(controller: email, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'Email address', prefixIcon: Icon(Icons.mail_outline))),
+          const SizedBox(height: 10), TextField(controller: password, obscureText: true, decoration: const InputDecoration(labelText: 'Password', prefixIcon: Icon(Icons.lock_outline))),
+          if (error != null) Padding(padding: const EdgeInsets.only(top: 10), child: Text(error!, style: const TextStyle(color: Color(0xFFB33A3A), fontSize: 11))),
+          if (notice != null) Padding(padding: const EdgeInsets.only(top: 10), child: Text(notice!, style: const TextStyle(color: green, fontSize: 11))),
+          const SizedBox(height: 15),
+          FilledButton(onPressed: busy ? null : submit, child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+            if (busy) const SizedBox(width: 15, height: 15, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
+            if (busy) const SizedBox(width: 8), Text(busy ? 'Please wait...' : signup ? 'Create account' : 'Sign in'),
+          ])),
+          const SizedBox(height: 7),
+          TextButton(onPressed: () => setState(() { signup = !signup; error = null; notice = null; }), child: Text(signup ? 'Already have an account? Sign in' : 'New to DISCOVERLY? Create an account', style: const TextStyle(color: green, fontSize: 11, fontWeight: FontWeight.w800))),
+        ])),
+        const SizedBox(height: 13),
+        const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+          Icon(Icons.lock_outline_rounded, size: 12, color: Color(0xFF87948C)), SizedBox(width: 5),
+          Text('SECURE AUTHENTICATION  •  SUPABASE', style: TextStyle(color: Color(0xFF87948C), fontSize: 8, fontWeight: FontWeight.w900, letterSpacing: .8)),
+        ]),
       ])),
     ))),
   );
