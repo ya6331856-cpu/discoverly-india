@@ -49,6 +49,32 @@ class DiscoverlyApp extends StatelessWidget {
   );
 }
 
+class DiscoverlyMark extends StatelessWidget {
+  final double size;
+  const DiscoverlyMark({super.key, this.size = 42});
+  @override
+  Widget build(BuildContext context) => Container(
+    width: size, height: size,
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(size * .29),
+      gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight,
+        colors: [Color(0xFF123D32), Color(0xFF061D18)]),
+      border: Border.all(color: const Color(0x99D9B66E), width: 1),
+      boxShadow: const [BoxShadow(color: Color(0x26087E63), blurRadius: 12, offset: Offset(0, 4))],
+    ),
+    child: Stack(alignment: Alignment.center, children: [
+      Container(width: size * .67, height: size * .67,
+        decoration: BoxDecoration(shape: BoxShape.circle,
+          border: Border.all(color: const Color(0x99D9B66E), width: 1.1))),
+      Transform.rotate(angle: -.55,
+        child: Icon(Icons.navigation_rounded, size: size * .48, color: const Color(0xFFF4E5C3))),
+      Positioned(right: size * .19, top: size * .17,
+        child: Container(width: size * .10, height: size * .10,
+          decoration: const BoxDecoration(color: Color(0xFFE4C17B), shape: BoxShape.circle))),
+    ]),
+  );
+}
+
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
   @override State<AuthScreen> createState() => _AuthScreenState();
@@ -86,7 +112,7 @@ class _AuthScreenState extends State<AuthScreen> {
           Positioned(right: 34, top: 23, child: Container(width: 95, height: 95, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: const Color(0x66E7C987), width: 1.2)))),
           Padding(padding: const EdgeInsets.all(19), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
-              Container(width: 38, height: 38, decoration: BoxDecoration(color: Colors.white.withValues(alpha: .13), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.travel_explore_rounded, color: Colors.white, size: 22)),
+              const DiscoverlyMark(size: 40),
               const SizedBox(width: 10), const Text('DISCOVERLY', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 17, letterSpacing: .8)),
               const Spacer(), const Icon(Icons.auto_awesome_rounded, color: Color(0xFFE7C987), size: 19),
             ]),
@@ -135,7 +161,7 @@ class _MainShellState extends State<MainShell> {
     appBar: AppBar(
       titleSpacing: 18,
       title: Row(children: [
-        Container(width: 37, height: 37, decoration: BoxDecoration(gradient: const LinearGradient(colors: [green, Color(0xFF123F32)]), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.travel_explore_rounded, color: Colors.white, size: 21)),
+        const DiscoverlyMark(size: 39),
         const SizedBox(width: 10), const Text('DISCOVERLY', style: TextStyle(letterSpacing: .7, fontSize: 18)),
       ]),
       actions: [
