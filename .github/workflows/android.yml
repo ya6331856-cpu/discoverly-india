@@ -27,6 +27,29 @@ jobs:
         with:
           channel: stable
           cache: true
+      - name: Ensure Flutter plugin build can resolve Maven dependencies
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import shutil
+
+          flutter = Path(shutil.which("flutter")).resolve()
+          sdk_root = flutter.parent.parent
+          settings = sdk_root / "packages/flutter_tools/gradle/settings.gradle.kts"
+          current = settings.read_text()
+          if "pluginManagement" not in current:
+              current = """pluginManagement {
+              repositories {
+                  google()
+                  mavenCentral()
+                  gradlePluginPortal()
+              }
+          }
+
+          """ + current
+              settings.write_text(current)
+          print(f"Verified plugin repositories in {settings}")
+          PY
       - name: Generate Android platform files
         run: flutter create --platforms=android --org=com.discoverly .
       - name: Ensure Android internet permission
