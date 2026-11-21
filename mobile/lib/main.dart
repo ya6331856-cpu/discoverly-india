@@ -143,7 +143,29 @@ class _RequirementsScreenState extends State<RequirementsScreen> {
     try { await supabase.rpc('create_requirement_and_match', params: {'p_title': title.text.trim(), 'p_description': desc.text.trim(), 'p_requirement_type': 'other', 'p_category_id': null, 'p_city': city.text.trim().isEmpty ? null : city.text.trim(), 'p_state': state.text.trim().isEmpty ? null : state.text.trim()}); await load(); if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Requirement posted successfully'))); }
     catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Requirement post nahi hua. Please details check karein.'))); }
   }
-  @override Widget build(BuildContext context) => Scaffold(backgroundColor: Colors.transparent, floatingActionButton: FloatingActionButton.extended(onPressed: add, backgroundColor: green, foregroundColor: Colors.white, icon: const Icon(Icons.add), label: const Text('Post requirement')), body: loading ? const Center(child: CircularProgressIndicator()) : rows.isEmpty ? const Center(child: Text('Aapki requirements yahan dikhenge.')) : ListView(padding: const EdgeInsets.all(16), children: rows.map((r) => Card(child: ListTile(title: Text(r['title'] ?? ''), subtitle: Text('${r['city'] ?? ''} ${r['state'] ?? ''} • ${r['status'] ?? ''}')))).toList());
+  @override
+  Widget build(BuildContext context) {
+    final children = rows.map((r) {
+      return Card(
+        child: ListTile(
+          title: Text(r['title'] ?? ''),
+          subtitle: Text('${r['city'] ?? ''} ${r['state'] ?? ''} • ${r['status'] ?? ''}'),
+        ),
+      );
+    }).toList();
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: add, backgroundColor: green, foregroundColor: Colors.white,
+        icon: const Icon(Icons.add), label: const Text('Post requirement'),
+      ),
+      body: loading
+          ? const Center(child: CircularProgressIndicator())
+          : rows.isEmpty
+              ? const Center(child: Text('Aapki requirements yahan dikhenge.'))
+              : ListView(padding: const EdgeInsets.all(16), children: children),
+    );
+  }
 }
 
 class OpportunitiesScreen extends StatefulWidget { const OpportunitiesScreen({super.key}); @override State<OpportunitiesScreen> createState() => _OpportunitiesScreenState(); }
@@ -169,5 +191,20 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   List<dynamic> rows = []; bool loading = true;
   @override void initState() { super.initState(); load(); }
   Future<void> load() async { try { final r = await supabase.from('notifications').select('id,title,body,created_at,read_at').order('created_at', ascending: false).limit(50); if (mounted) setState(() => rows = r); } catch (_) {} if (mounted) setState(() => loading = false); }
-  @override Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text('Notifications')), body: loading ? const Center(child: CircularProgressIndicator()) : rows.isEmpty ? const Center(child: Text('No notifications yet')) : ListView(children: rows.map((r) => ListTile(leading: const Icon(Icons.notifications_active_outlined, color: green), title: Text(r['title'] ?? ''), subtitle: Text(r['body'] ?? ''))).toList());
+  @override
+  Widget build(BuildContext context) {
+    final children = rows.map((r) => ListTile(
+      leading: const Icon(Icons.notifications_active_outlined, color: green),
+      title: Text(r['title'] ?? ''),
+      subtitle: Text(r['body'] ?? ''),
+    )).toList();
+    return Scaffold(
+      appBar: AppBar(title: const Text('Notifications')),
+      body: loading
+          ? const Center(child: CircularProgressIndicator())
+          : rows.isEmpty
+              ? const Center(child: Text('No notifications yet'))
+              : ListView(children: children),
+    );
+  }
 }
