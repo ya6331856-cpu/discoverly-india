@@ -5,28 +5,24 @@ import {createClient} from "@/lib/supabase/client";
 
 export default function AuthPage(){
  const router=useRouter();
- const[mode,setMode]=useState<"login"|"signup">("signup");
+ const[mode,setMode]=useState<"login"|"signup">("login");
  const[name,setName]=useState("");
  const[email,setEmail]=useState("");
  const[password,setPassword]=useState("");
  const[busy,setBusy]=useState(false);
  const[notice,setNotice]=useState("");
  const[error,setError]=useState("");
- const[nextPath,setNextPath]=useState("/business/register");
-
  useEffect(()=>{
-  const params=new URLSearchParams(window.location.search);
-  const target=params.get("next");
+  const target=new URLSearchParams(window.location.search).get("next");
   const safe=target&&target.startsWith("/")&&!target.startsWith("//")?target:"/account";
-  setNextPath(safe);
-  if(params.get("mode")==="login")setMode("login");
-  if(params.get("error")==="verification")setError("Email verification link could not be completed. Please sign in and try again.");
   const sb=createClient();
   if(sb)void sb.auth.getUser().then(({data})=>{if(data.user)router.replace(safe);});
  },[router]);
 
  async function submit(event:React.FormEvent<HTMLFormElement>){
   event.preventDefault();setBusy(true);setError("");setNotice("");
+  const requested=new URLSearchParams(window.location.search).get("next");
+  const destination=requested&&requested.startsWith("/")&&!requested.startsWith("//")?requested:"/account";
   const sb=createClient();
   if(!sb){setError("Supabase is not configured on this deployment yet.");setBusy(false);return;}
   if(mode==="signup"){
@@ -35,15 +31,15 @@ export default function AuthPage(){
     password,
     options:{
      data:{display_name:name.trim()},
-     emailRedirectTo:window.location.origin+"/auth/callback?next="+encodeURIComponent(nextPath)
+     emailRedirectTo:window.location.origin+"/auth/callback?next="+encodeURIComponent(destination)
     }
    });
    if(authError)setError(authError.message);
-   else if(data.session)router.replace(nextPath);
+   else if(data.session)router.replace(destination);
    else setNotice("Account request received. Check your email and open the verification link to activate your account.");
   }else{
    const {error:authError}=await sb.auth.signInWithPassword({email:email.trim(),password});
-   if(authError)setError(authError.message);else router.replace(nextPath);
+   if(authError)setError(authError.message);else router.replace(destination);
   }
   setBusy(false);
  }
