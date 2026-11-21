@@ -157,50 +157,47 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   int index = 0;
   final pages = const [DiscoverScreen(), RequirementsScreen(), OpportunitiesScreen(), ProfileScreen()];
+  final titles = const ['Discover', 'Requests', 'Leads', 'Profile'];
   @override Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      titleSpacing: 18,
-      title: Row(children: [
-        const DiscoverlyMark(size: 39),
-        const SizedBox(width: 10), const Text('DISCOVERLY', style: TextStyle(letterSpacing: .7, fontSize: 18)),
-      ]),
-      actions: [
-        IconButton(
-          style: IconButton.styleFrom(backgroundColor: Colors.white, side: const BorderSide(color: Color(0xFFE5ECE7))),
-          onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen())),
-          icon: const Icon(Icons.notifications_none_rounded, size: 23),
-        ),
-        const SizedBox(width: 14),
-      ],
+    extendBody: false,
+    backgroundColor: const Color(0xFFF4F7F4),
+    appBar: PreferredSize(
+      preferredSize: const Size.fromHeight(66),
+      child: SafeArea(bottom: false, child: Padding(
+        padding: const EdgeInsets.fromLTRB(18, 8, 16, 8),
+        child: Row(children: [
+          const DiscoverlyMark(size: 42),
+          const SizedBox(width: 11),
+          Expanded(child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('DISCOVERLY', style: TextStyle(fontSize: 10, letterSpacing: 1.5, fontWeight: FontWeight.w900, color: green)),
+            Text(titles[index], style: const TextStyle(fontSize: 21, height: 1.1, letterSpacing: -.5, fontWeight: FontWeight.w900, color: ink)),
+          ])),
+          IconButton.filledTonal(
+            tooltip: 'Notifications',
+            style: IconButton.styleFrom(backgroundColor: Colors.white, foregroundColor: ink, fixedSize: const Size(44, 44), side: const BorderSide(color: Color(0xFFE5ECE7))),
+            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const NotificationsScreen())),
+            icon: const Icon(Icons.notifications_none_rounded, size: 22),
+          ),
+        ]),
+      )),
     ),
     body: IndexedStack(index: index, children: pages),
-    bottomNavigationBar: SafeArea(top: false, child: Container(
-      margin: const EdgeInsets.fromLTRB(14, 5, 14, 10), padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 7),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(23), border: Border.all(color: const Color(0xFFE4EBE6)), boxShadow: const [BoxShadow(color: Color(0x120B2920), blurRadius: 20, offset: Offset(0, 6))]),
-      child: Row(children: [
-        _NavItem(icon: Icons.explore_outlined, activeIcon: Icons.explore_rounded, label: 'Discover', selected: index == 0, onTap: () => setState(() => index = 0)),
-        _NavItem(icon: Icons.assignment_outlined, activeIcon: Icons.assignment_rounded, label: 'Requests', selected: index == 1, onTap: () => setState(() => index = 1)),
-        _NavItem(icon: Icons.work_outline_rounded, activeIcon: Icons.work_rounded, label: 'Leads', selected: index == 2, onTap: () => setState(() => index = 2)),
-        _NavItem(icon: Icons.person_outline_rounded, activeIcon: Icons.person_rounded, label: 'Profile', selected: index == 3, onTap: () => setState(() => index = 3)),
-      ]),
-    )),
-  );
-}
-
-class _NavItem extends StatelessWidget {
-  final IconData icon, activeIcon; final String label; final bool selected; final VoidCallback onTap;
-  const _NavItem({required this.icon, required this.activeIcon, required this.label, required this.selected, required this.onTap});
-  @override Widget build(BuildContext context) => Expanded(child: InkWell(
-    onTap: onTap, borderRadius: BorderRadius.circular(17),
-    child: AnimatedContainer(duration: const Duration(milliseconds: 180), padding: const EdgeInsets.symmetric(vertical: 9),
-      decoration: BoxDecoration(color: selected ? const Color(0xFFE6F2EB) : Colors.transparent, borderRadius: BorderRadius.circular(17)),
-      child: Column(mainAxisSize: MainAxisSize.min, children: [
-        Icon(selected ? activeIcon : icon, size: 21, color: selected ? green : const Color(0xFF829088)),
-        const SizedBox(height: 4),
-        Text(label, style: TextStyle(fontSize: 10, fontWeight: selected ? FontWeight.w900 : FontWeight.w600, color: selected ? green : const Color(0xFF829088))),
-      ]),
+    bottomNavigationBar: NavigationBar(
+      selectedIndex: index,
+      onDestinationSelected: (value) => setState(() => index = value),
+      height: 72,
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.white,
+      indicatorColor: const Color(0xFFE1F0E7),
+      labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+      destinations: const [
+        NavigationDestination(icon: Icon(Icons.explore_outlined), selectedIcon: Icon(Icons.explore_rounded), label: 'Discover'),
+        NavigationDestination(icon: Icon(Icons.assignment_outlined), selectedIcon: Icon(Icons.assignment_rounded), label: 'Requests'),
+        NavigationDestination(icon: Icon(Icons.work_outline_rounded), selectedIcon: Icon(Icons.work_rounded), label: 'Leads'),
+        NavigationDestination(icon: Icon(Icons.person_outline_rounded), selectedIcon: Icon(Icons.person_rounded), label: 'Profile'),
+      ],
     ),
-  ));
+  );
 }
 
 class DiscoverScreen extends StatefulWidget {
@@ -312,55 +309,48 @@ class _DiscoveryCommandCenter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    height: 204,
-    clipBehavior: Clip.antiAlias,
+    padding: const EdgeInsets.fromLTRB(18, 17, 16, 16),
     decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(23),
-      gradient: const LinearGradient(
-        begin: Alignment.topLeft, end: Alignment.bottomRight,
-        colors: [Color(0xFF071B16), Color(0xFF0B392B), Color(0xFF12634A)],
-      ),
-      boxShadow: const [BoxShadow(color: Color(0x240B392B), blurRadius: 24, offset: Offset(0, 11))],
+      color: const Color(0xFF09251D),
+      borderRadius: BorderRadius.circular(22),
+      boxShadow: const [BoxShadow(color: Color(0x1C09251D), blurRadius: 20, offset: Offset(0, 9))],
     ),
     child: Stack(children: [
-      Positioned(right: -65, top: -90, child: Container(
-        width: 270, height: 270,
-        decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: const Color(0x20E9C982), width: 1)),
+      Positioned(right: -12, top: -28, child: Container(
+        width: 132, height: 132,
+        decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: const Color(0x35D9B66E), width: 1.2)),
       )),
-      Positioned(right: -24, top: -48, child: Container(
-        width: 190, height: 190,
-        decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: const Color(0x35E9C982), width: 1)),
+      Positioned(right: 13, top: -3, child: Container(
+        width: 82, height: 82,
+        decoration: BoxDecoration(shape: BoxShape.circle, color: const Color(0x12D9B66E), border: Border.all(color: const Color(0x55D9B66E))),
+        child: const Icon(Icons.travel_explore_rounded, color: Color(0xFFE7C987), size: 35),
       )),
-      Positioned(right: 26, top: 32, child: Container(
-        width: 88, height: 88,
-        decoration: BoxDecoration(shape: BoxShape.circle, color: const Color(0x14E9C982), border: Border.all(color: const Color(0x70E9C982), width: 1)),
-        child: const Icon(Icons.explore_rounded, color: Color(0xFFE9C982), size: 39),
-      )),
-      Padding(
-        padding: const EdgeInsets.fromLTRB(19, 17, 18, 15),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [
-            Container(width: 7, height: 7, decoration: const BoxDecoration(color: Color(0xFFE9C982), shape: BoxShape.circle)),
-            const SizedBox(width: 7),
-            const Text('INDIA • ONE DISCOVERY NETWORK', style: TextStyle(color: Color(0xFFD2E5DA), fontSize: 9, fontWeight: FontWeight.w900, letterSpacing: 1.05)),
-            const Spacer(),
-            const Icon(Icons.north_east_rounded, color: Color(0xFFE9C982), size: 17),
-          ]),
-          const Spacer(),
-          const Text('Find what\nmoves you forward.', style: TextStyle(color: Colors.white, fontSize: 25, height: 1.04, fontWeight: FontWeight.w900, letterSpacing: -.8)),
-          const SizedBox(height: 7),
-          const Text('Businesses. Services. Opportunities.', style: TextStyle(color: Color(0xFFD2E5DA), fontSize: 11, fontWeight: FontWeight.w600)),
-          const Spacer(),
-          Row(children: [
-            Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7), decoration: BoxDecoration(color: const Color(0xFFE9C982), borderRadius: BorderRadius.circular(9)), child: const Row(children: [
-              Text('Explore network', style: TextStyle(color: Color(0xFF10251D), fontSize: 10, fontWeight: FontWeight.w900)),
-              SizedBox(width: 5), Icon(Icons.arrow_forward_rounded, color: Color(0xFF10251D), size: 13),
-            ])),
-            const SizedBox(width: 10),
-            Text('$resultCount listings found', style: const TextStyle(color: Color(0xFFBBD2C5), fontSize: 9, fontWeight: FontWeight.w700)),
-          ]),
+      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          Container(width: 7, height: 7, decoration: const BoxDecoration(color: Color(0xFFE7C987), shape: BoxShape.circle)),
+          const SizedBox(width: 7),
+          const Text('INDIA-WIDE DISCOVERY', style: TextStyle(color: Color(0xFFBFD9CC), fontSize: 9, letterSpacing: 1.1, fontWeight: FontWeight.w900)),
         ]),
-      ),
+        const SizedBox(height: 18),
+        const Text('What are you\\nlooking for today?', style: TextStyle(color: Colors.white, fontSize: 23, height: 1.08, letterSpacing: -.6, fontWeight: FontWeight.w900)),
+        const SizedBox(height: 7),
+        const Text('Find businesses, services and opportunities.', style: TextStyle(color: Color(0xFFD1E2D9), fontSize: 11)),
+        const SizedBox(height: 16),
+        Row(children: [
+          const Icon(Icons.storefront_outlined, size: 15, color: Color(0xFFE7C987)),
+          const SizedBox(width: 6),
+          Text('$resultCount matching listings', style: const TextStyle(color: Color(0xFFD1E2D9), fontSize: 10, fontWeight: FontWeight.w700)),
+          const Spacer(),
+          Material(
+            color: const Color(0xFFE7C987),
+            borderRadius: BorderRadius.circular(11),
+            child: InkWell(onTap: onExplore, borderRadius: BorderRadius.circular(11), child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+              child: Row(children: [Text('Explore', style: TextStyle(color: Color(0xFF10251D), fontSize: 10, fontWeight: FontWeight.w900)), SizedBox(width: 5), Icon(Icons.arrow_forward_rounded, color: Color(0xFF10251D), size: 14)]),
+            )),
+          ),
+        ]),
+      ]),
     ]),
   );
 }
