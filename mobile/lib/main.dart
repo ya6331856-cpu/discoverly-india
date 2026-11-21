@@ -33,16 +33,16 @@ class DiscoverlyApp extends StatelessWidget {
         bodyLarge: TextStyle(fontSize: 16, color: ink, height: 1.45),
         bodyMedium: TextStyle(fontSize: 14, color: Color(0xFF718078), height: 1.45),
       ),
-      appBarTheme: const AppBarTheme(backgroundColor: Color(0xFFF4F7F4), foregroundColor: ink, elevation: 0, toolbarHeight: 68, titleTextStyle: TextStyle(fontSize: 21, fontWeight: FontWeight.w900, color: ink)),
+      appBarTheme: const AppBarTheme(backgroundColor: Color(0xFFF4F7F4), foregroundColor: ink, elevation: 0, toolbarHeight: 60, titleTextStyle: TextStyle(fontSize: 21, fontWeight: FontWeight.w900, color: ink)),
       inputDecorationTheme: InputDecorationTheme(
         filled: true, fillColor: Colors.white, hintStyle: const TextStyle(fontSize: 15, color: Color(0xFF98A39D)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 17, vertical: 18), prefixIconColor: green,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 17, vertical: 14), prefixIconColor: green,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(17), borderSide: const BorderSide(color: Color(0xFFE5ECE7))),
         enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(17), borderSide: const BorderSide(color: Color(0xFFE5ECE7))),
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(17), borderSide: const BorderSide(color: green, width: 1.5)),
       ),
       cardTheme: CardThemeData(color: Colors.white, elevation: 0, margin: EdgeInsets.zero, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(21), side: const BorderSide(color: Color(0xFFE5ECE7)))),
-      filledButtonTheme: FilledButtonThemeData(style: FilledButton.styleFrom(backgroundColor: green, foregroundColor: Colors.white, minimumSize: const Size(0, 54), textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)))),
+      filledButtonTheme: FilledButtonThemeData(style: FilledButton.styleFrom(backgroundColor: green, foregroundColor: Colors.white, minimumSize: const Size(0, 48), textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)))),
       navigationBarTheme: NavigationBarThemeData(height: 76, backgroundColor: Colors.white, elevation: 0, indicatorColor: const Color(0xFFE5F2EB), labelTextStyle: WidgetStateProperty.all(const TextStyle(fontSize: 12, fontWeight: FontWeight.w700))),
     ),
     home: supabase.auth.currentSession == null ? const AuthScreen() : const MainShell(),
@@ -261,14 +261,14 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
       ]),
       const SizedBox(height: 13),
       Container(
-        height: 154, clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF0B211C), Color(0xFF0D4938), Color(0xFF087E63)]), borderRadius: BorderRadius.circular(22)),
+        height: 116, clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF0B211C), Color(0xFF0D4938), Color(0xFF087E63)]), borderRadius: BorderRadius.circular(18)),
         child: Stack(children: [
           Positioned(right: -24, top: -53, child: Container(width: 195, height: 195, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.white.withValues(alpha: .10), width: 22)))),
           Positioned(right: 22, top: 22, child: Container(width: 98, height: 98, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: const Color(0x66E4C887), width: 1.2)))),
           Positioned(right: 53, top: 53, child: Container(width: 36, height: 36, decoration: const BoxDecoration(shape: BoxShape.circle, gradient: RadialGradient(colors: [Color(0xFFE8CB8D), Color(0x00E8CB8D)])))),
           Positioned(left: 17, top: 16, child: Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5), decoration: BoxDecoration(color: Colors.white.withValues(alpha: .12), borderRadius: BorderRadius.circular(20)), child: const Text('THE NETWORK FOR WHAT’S NEXT', style: TextStyle(color: Color(0xFFDDEDE5), fontSize: 8, fontWeight: FontWeight.w900, letterSpacing: .8)))),
-          const Positioned(left: 17, top: 51, child: Text('Discover. Connect.\nMove forward.', style: TextStyle(color: Colors.white, fontSize: 23, height: 1.13, fontWeight: FontWeight.w900, letterSpacing: -.5))),
+          const Positioned(left: 17, top: 51, child: Text('Discover. Connect.\nMove forward.', style: TextStyle(color: Colors.white, fontSize: 19, height: 1.12, fontWeight: FontWeight.w900, letterSpacing: -.5))),
           const Positioned(left: 18, bottom: 16, child: Row(children: [
             Icon(Icons.bolt_rounded, color: Color(0xFFE7C987), size: 15), SizedBox(width: 4),
             Text('Businesses  •  Services  •  Opportunities', style: TextStyle(color: Color(0xFFD3E6DD), fontSize: 9, fontWeight: FontWeight.w700)),
@@ -293,15 +293,15 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
         const Text('BROWSE', style: TextStyle(fontSize: 9, color: green, fontWeight: FontWeight.w900, letterSpacing: .9)),
       ]),
       const SizedBox(height: 10),
-      SizedBox(height: 82, child: ListView.separated(scrollDirection: Axis.horizontal, itemCount: categories.length, separatorBuilder: (_, __) => const SizedBox(width: 9), itemBuilder: (context, i) {
+      SizedBox(height: 66, child: ListView.separated(scrollDirection: Axis.horizontal, itemCount: categories.length, separatorBuilder: (_, __) => const SizedBox(width: 9), itemBuilder: (context, i) {
         final item = categories[i];
         final selected = activeCategory == item.label;
         return InkWell(onTap: () => chooseCategory(item), borderRadius: BorderRadius.circular(15), child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180), width: 73, padding: const EdgeInsets.symmetric(vertical: 9),
+          duration: const Duration(milliseconds: 180), width: 66, padding: const EdgeInsets.symmetric(vertical: 6),
           decoration: BoxDecoration(color: selected ? const Color(0xFFE4F1E9) : Colors.white, borderRadius: BorderRadius.circular(15), border: Border.all(color: selected ? green : const Color(0xFFE6ECE7))),
           child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Icon(item.icon, color: green, size: 21), const SizedBox(height: 6),
-            Text(item.label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 9, color: ink, fontWeight: FontWeight.w800)),
+            Icon(item.icon, color: green, size: 18), const SizedBox(height: 6),
+            Text(item.label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 8, color: ink, fontWeight: FontWeight.w800)),
           ]),
         ));
       })),
@@ -349,14 +349,14 @@ class BusinessTile extends StatelessWidget {
     final desc = item['description'] ?? 'Discover this business and its services.';
     final city = item['city']?.toString(), state = item['state']?.toString();
     final initials = title.toString().trim().isEmpty ? 'B' : title.toString().trim()[0].toUpperCase();
-    return Container(margin: const EdgeInsets.only(bottom: 9), padding: const EdgeInsets.all(13), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(17), border: Border.all(color: const Color(0xFFE5ECE7)), boxShadow: const [BoxShadow(color: Color(0x050B2920), blurRadius: 9, offset: Offset(0, 3))]), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Container(width: 47, height: 47, alignment: Alignment.center, decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF123F32), Color(0xFF087E63)]), borderRadius: BorderRadius.circular(14)), child: Text(initials, style: const TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w900))),
+    return Container(margin: const EdgeInsets.only(bottom: 5), padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 9), decoration: const BoxDecoration(color: Colors.white, border: Border(bottom: BorderSide(color: Color(0xFFE7EDE8)))), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Container(width: 38, height: 38, alignment: Alignment.center, decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF123F32), Color(0xFF087E63)]), borderRadius: BorderRadius.circular(14)), child: Text(initials, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w900))),
       const SizedBox(width: 11), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
-          Expanded(child: Text('$title', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: ink))),
+          Expanded(child: Text('$title', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: ink))),
           const SizedBox(width: 6), Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3), decoration: BoxDecoration(color: const Color(0xFFF1F4F1), borderRadius: BorderRadius.circular(5)), child: const Text('BUSINESS', style: TextStyle(fontSize: 7, letterSpacing: .5, color: Color(0xFF65736B), fontWeight: FontWeight.w900))),
         ]),
-        const SizedBox(height: 4), Text('$desc', maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10, height: 1.35, color: Color(0xFF718078))),
+        const SizedBox(height: 4), Text('$desc', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 9, height: 1.25, color: Color(0xFF718078))),
         if ((city ?? '').isNotEmpty || (state ?? '').isNotEmpty) Padding(padding: const EdgeInsets.only(top: 7), child: Row(children: [
           const Icon(Icons.location_on_outlined, size: 12, color: green), const SizedBox(width: 3),
           Expanded(child: Text([city, state].where((v) => v != null && v.isNotEmpty).join(', '), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 9, color: green, fontWeight: FontWeight.w800))),
@@ -410,20 +410,20 @@ class _RequirementsScreenState extends State<RequirementsScreen> {
       : RefreshIndicator(color: green, onRefresh: load, child: ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 95), children: [
         const _SectionHeading(kicker: 'BUYER WORKSPACE', title: 'Your requests', subtitle: 'Track requirements and business responses.'),
         const SizedBox(height: 15),
-        Container(padding: const EdgeInsets.all(15), decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF102A22), Color(0xFF14513D)]), borderRadius: BorderRadius.circular(18)), child: Row(children: [
+        Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF102A22), Color(0xFF14513D)]), borderRadius: BorderRadius.circular(14)), child: Row(children: [
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             const Text('REQUEST OVERVIEW', style: TextStyle(color: Color(0xFFBFD9CC), fontSize: 8, letterSpacing: 1, fontWeight: FontWeight.w900)),
-            const SizedBox(height: 5), Text('${rows.length} active records', style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w900)),
-            const SizedBox(height: 4), const Text('Your posted needs in one place', style: TextStyle(color: Color(0xFFD3E4DC), fontSize: 10)),
+            const SizedBox(height: 5), Text('${rows.length} active records', style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w900)),
+            const SizedBox(height: 2), const Text('Your posted needs in one place', style: TextStyle(color: Color(0xFFD3E4DC), fontSize: 10)),
           ])),
-          Container(width: 48, height: 48, decoration: BoxDecoration(color: Colors.white.withValues(alpha: .12), borderRadius: BorderRadius.circular(15)), child: const Icon(Icons.assignment_turned_in_outlined, color: Color(0xFFE7C987), size: 24)),
+          Container(width: 38, height: 38, decoration: BoxDecoration(color: Colors.white.withValues(alpha: .12), borderRadius: BorderRadius.circular(15)), child: const Icon(Icons.assignment_turned_in_outlined, color: Color(0xFFE7C987), size: 24)),
         ])),
         const SizedBox(height: 16),
         if (rows.isEmpty) _CompactEmpty(icon: Icons.post_add_rounded, title: 'No requirements posted', message: 'Create your first request and let matching businesses discover what you need.', action: 'Create a request', onTap: add)
         else ...rows.map((r) {
           final status = (r['status'] ?? 'open').toString();
           final location = [r['city'], r['state']].where((v) => v != null && v.toString().trim().isNotEmpty).join(', ');
-          return Container(margin: const EdgeInsets.only(bottom: 10), padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(17), border: Border.all(color: const Color(0xFFE5ECE7))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          return Container(margin: const EdgeInsets.only(bottom: 6), padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 10), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(13), border: Border.all(color: const Color(0xFFE5ECE7))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
               Expanded(child: Text(r['title'] ?? 'Untitled requirement', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, color: ink, fontWeight: FontWeight.w900))),
               _StatusPill(status: status),
@@ -459,11 +459,11 @@ class _OpportunitiesScreenState extends State<OpportunitiesScreen> {
     : RefreshIndicator(color: green, onRefresh: load, child: ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 25), children: [
       const _SectionHeading(kicker: 'BUSINESS WORKSPACE', title: 'Opportunity desk', subtitle: 'Keep an eye on new business enquiries.'),
       const SizedBox(height: 15),
-      Container(padding: const EdgeInsets.all(15), decoration: BoxDecoration(color: const Color(0xFF112820), borderRadius: BorderRadius.circular(18)), child: Row(children: [
+      Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), decoration: BoxDecoration(color: const Color(0xFF112820), borderRadius: BorderRadius.circular(14)), child: Row(children: [
         Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           const Text('YOUR LEAD PIPELINE', style: TextStyle(color: Color(0xFFBFD9CC), fontSize: 8, letterSpacing: 1, fontWeight: FontWeight.w900)),
-          const SizedBox(height: 5), Text('${rows.length.toString().padLeft(2, '0')} opportunities', style: const TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w900)),
-          const SizedBox(height: 4), const Text('New enquiries and matching requests', style: TextStyle(color: Color(0xFFD3E4DC), fontSize: 10)),
+          const SizedBox(height: 5), Text('${rows.length.toString().padLeft(2, '0')} opportunities', style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 2), const Text('New enquiries and matching requests', style: TextStyle(color: Color(0xFFD3E4DC), fontSize: 10)),
         ])),
         const Icon(Icons.insights_rounded, color: Color(0xFFE7C987), size: 37),
       ])),
