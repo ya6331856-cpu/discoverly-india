@@ -36,7 +36,7 @@ export default function BusinessVerificationPage(){
     if(v.error){setError(v.error.message);setLoading(false);return;}
     setCompany(c.data as Company);setCases((v.data||[]) as Verification[]);setLoading(false);
   }
-  useEffect(()=>{void load();},[companyId]);
+  useEffect(()=>{void Promise.resolve().then(()=>load());},[companyId]);
 
   async function submit(event:FormEvent<HTMLFormElement>){
     event.preventDefault();setError("");setNotice("");
