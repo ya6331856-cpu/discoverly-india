@@ -414,23 +414,48 @@ class _RequirementsScreenState extends State<RequirementsScreen> {
   @override void initState() { super.initState(); load(); }
   Future<void> add() async {
     final title = TextEditingController(), desc = TextEditingController(), city = TextEditingController(), state = TextEditingController();
-    final ok = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(
-      title: const Text('Post a requirement'),
-      content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
-        TextField(controller: title, decoration: const InputDecoration(labelText: 'What do you need?')),
-        const SizedBox(height: 10), TextField(controller: desc, maxLines: 3, decoration: const InputDecoration(labelText: 'Details')),
-        const SizedBox(height: 10), TextField(controller: city, decoration: const InputDecoration(labelText: 'City')),
-        const SizedBox(height: 10), TextField(controller: state, decoration: const InputDecoration(labelText: 'State')),
-      ])),
-      actions: [TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')), FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Post'))],
-    ));
-    if (ok != true || title.text.trim().isEmpty) return;
-    try {
-      await supabase.rpc('create_requirement_and_match', params: {'p_title': title.text.trim(), 'p_description': desc.text.trim(), 'p_requirement_type': 'other', 'p_category_id': null, 'p_city': city.text.trim().isEmpty ? null : city.text.trim(), 'p_state': state.text.trim().isEmpty ? null : state.text.trim()});
+    var sending = false;
+    final ok = await showModalBottomSheet<bool>(
+      context: context, isScrollControlled: true, useSafeArea: true, showDragHandle: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+      builder: (ctx) => StatefulBuilder(builder: (ctx, refresh) => Padding(
+        padding: EdgeInsets.fromLTRB(20, 8, 20, MediaQuery.of(ctx).viewInsets.bottom + 22),
+        child: SingleChildScrollView(child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, mainAxisSize: MainAxisSize.min, children: [
+          const Text('Create a request', style: TextStyle(fontSize: 23, fontWeight: FontWeight.w900, color: ink)),
+          const SizedBox(height: 5), const Text('Tell relevant businesses what you need.', style: TextStyle(fontSize: 13, color: Color(0xFF718078))),
+          const SizedBox(height: 20),
+          TextField(controller: title, textCapitalization: TextCapitalization.sentences, decoration: const InputDecoration(labelText: 'What do you need?', prefixIcon: Icon(Icons.lightbulb_outline_rounded))),
+          const SizedBox(height: 12),
+          TextField(controller: desc, maxLines: 3, textCapitalization: TextCapitalization.sentences, decoration: const InputDecoration(labelText: 'Describe your requirement', alignLabelWithHint: true)),
+          const SizedBox(height: 12),
+          Row(children: [
+            Expanded(child: TextField(controller: city, decoration: const InputDecoration(labelText: 'City', prefixIcon: Icon(Icons.location_city_rounded)))),
+            const SizedBox(width: 10), Expanded(child: TextField(controller: state, decoration: const InputDecoration(labelText: 'State'))),
+          ]),
+          const SizedBox(height: 18),
+          FilledButton(onPressed: sending ? null : () async {
+            if (title.text.trim().isEmpty) { ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('Please enter what you need.'))); return; }
+            refresh(() => sending = true);
+            try {
+              await supabase.rpc('create_requirement_and_match', params: {
+                'p_title': title.text.trim(), 'p_description': desc.text.trim(), 'p_requirement_type': 'other',
+                'p_category_id': null, 'p_city': city.text.trim().isEmpty ? null : city.text.trim(),
+                'p_state': state.text.trim().isEmpty ? null : state.text.trim(),
+              });
+              if (ctx.mounted) Navigator.pop(ctx, true);
+            } catch (_) {
+              refresh(() => sending = false);
+              if (ctx.mounted) ScaffoldMessenger.of(ctx).showSnackBar(const SnackBar(content: Text('Could not post the request. Please try again.')));
+            }
+          }, child: sending ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Publish request')),
+        ])),
+      )),
+    );
+    title.dispose(); desc.dispose(); city.dispose(); state.dispose();
+    if (ok == true) {
       await load();
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Requirement posted successfully')));
-    } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Your requirement could not be posted. Please check the details and try again.')));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Your request has been published.')));
     }
   }
   @override Widget build(BuildContext context) => Scaffold(
@@ -476,7 +501,9 @@ class OpportunitiesScreen extends StatefulWidget {
 class _OpportunitiesScreenState extends State<OpportunitiesScreen> {
   List<dynamic> rows = [];
   bool loading = true;
+  String filter = 'All';
   Future<void> load() async {
+    setState(() => loading = true);
     try {
       final r = await supabase.from('leads').select('id,subject,message,status,created_at,companies(display_name)').order('created_at', ascending: false);
       if (mounted) setState(() => rows = r);
@@ -484,38 +511,70 @@ class _OpportunitiesScreenState extends State<OpportunitiesScreen> {
     if (mounted) setState(() => loading = false);
   }
   @override void initState() { super.initState(); load(); }
-  @override Widget build(BuildContext context) => loading
-    ? const Center(child: CircularProgressIndicator(color: green))
-    : RefreshIndicator(color: green, onRefresh: load, child: ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 25), children: [
-      const _SectionHeading(kicker: 'BUSINESS WORKSPACE', title: 'Opportunity desk', subtitle: 'Keep an eye on new business enquiries.'),
-      const SizedBox(height: 15),
-      Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10), decoration: BoxDecoration(color: const Color(0xFF112820), borderRadius: BorderRadius.circular(14)), child: Row(children: [
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('YOUR LEAD PIPELINE', style: TextStyle(color: Color(0xFFBFD9CC), fontSize: 8, letterSpacing: 1, fontWeight: FontWeight.w900)),
-          const SizedBox(height: 5), Text('${rows.length.toString().padLeft(2, '0')} opportunities', style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w900)),
-          const SizedBox(height: 2), const Text('New enquiries and matching requests', style: TextStyle(color: Color(0xFFD3E4DC), fontSize: 10)),
-        ])),
-        const Icon(Icons.insights_rounded, color: Color(0xFFE7C987), size: 37),
-      ])),
-      const SizedBox(height: 15),
-      if (rows.isEmpty) _CompactEmpty(icon: Icons.work_outline_rounded, title: 'No opportunities yet', message: 'When matching enquiries become available, they will appear here.', action: 'Refresh opportunities', onTap: load)
-      else ...rows.map((r) {
-        final company = r['companies'] is Map ? r['companies']['display_name'] : null;
-        return Container(margin: const EdgeInsets.only(bottom: 10), padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(17), border: Border.all(color: const Color(0xFFE5ECE7))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Row(children: [
-            Container(width: 39, height: 39, decoration: BoxDecoration(color: const Color(0xFFEAF2EC), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.bolt_rounded, color: green, size: 21)),
-            const SizedBox(width: 10), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(r['subject'] ?? 'Business opportunity', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: ink, fontWeight: FontWeight.w900)),
-              const SizedBox(height: 3), Text(company?.toString() ?? 'DISCOVERLY network', style: const TextStyle(fontSize: 10, color: Color(0xFF718078))),
+  @override Widget build(BuildContext context) {
+    final visible = filter == 'All' ? rows : rows.where((r) => (r['status'] ?? 'new').toString().toLowerCase() == filter.toLowerCase()).toList();
+    return loading ? const Center(child: CircularProgressIndicator(color: green))
+      : RefreshIndicator(color: green, onRefresh: load, child: ListView(padding: const EdgeInsets.fromLTRB(16, 8, 16, 25), children: [
+        const _SectionHeading(kicker: 'BUSINESS WORKSPACE', title: 'Opportunity desk', subtitle: 'Review incoming enquiries and matching requests.'),
+        const SizedBox(height: 16),
+        Row(children: [
+          Expanded(child: _MetricTile(label: 'ALL LEADS', value: rows.length.toString(), icon: Icons.inbox_outlined)),
+          const SizedBox(width: 9),
+          Expanded(child: _MetricTile(label: 'NEW LEADS', value: rows.where((r) => (r['status'] ?? 'new').toString().toLowerCase() == 'new').length.toString(), icon: Icons.bolt_rounded)),
+        ]),
+        const SizedBox(height: 17),
+        SizedBox(height: 39, child: ListView(scrollDirection: Axis.horizontal, children: ['All', 'New', 'Contacted', 'Accepted', 'Rejected'].map((s) => Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: ChoiceChip(label: Text(s), selected: filter == s, onSelected: (_) => setState(() => filter = s),
+            selectedColor: const Color(0xFFDDEFE4), backgroundColor: Colors.white,
+            side: BorderSide(color: filter == s ? green : const Color(0xFFE3EAE5)),
+            labelStyle: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: filter == s ? green : const Color(0xFF65736B))),
+        )).toList())),
+        const SizedBox(height: 15),
+        Row(children: [const Expanded(child: Text('Incoming opportunities', style: TextStyle(fontSize: 16, color: ink, fontWeight: FontWeight.w900))), Text(visible.length.toString() + ' shown', style: const TextStyle(fontSize: 11, color: Color(0xFF718078)))]),
+        const SizedBox(height: 10),
+        if (visible.isEmpty) _CompactEmpty(icon: Icons.work_outline_rounded, title: filter == 'All' ? 'No opportunities yet' : 'No ' + filter + ' leads', message: 'Matching enquiries will appear here when they are available to your business account.', action: 'Refresh opportunities', onTap: load)
+        else ...visible.map((r) {
+          final company = r['companies'] is Map ? r['companies']['display_name'] : null;
+          return Material(color: Colors.white, borderRadius: BorderRadius.circular(17), child: InkWell(
+            borderRadius: BorderRadius.circular(17),
+            onTap: () => showModalBottomSheet(context: context, showDragHandle: true, useSafeArea: true,
+              shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(26))),
+              builder: (_) => Padding(padding: const EdgeInsets.fromLTRB(20, 8, 20, 28), child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Row(children: [Expanded(child: Text(r['subject'] ?? 'Business opportunity', style: const TextStyle(fontSize: 21, fontWeight: FontWeight.w900, color: ink))), _StatusPill(status: (r['status'] ?? 'new').toString())]),
+                const SizedBox(height: 8), Text(company?.toString() ?? 'DISCOVERLY network', style: const TextStyle(fontSize: 12, color: green, fontWeight: FontWeight.w800)),
+                const SizedBox(height: 15), Text(r['message'] ?? 'No additional details provided.', style: const TextStyle(fontSize: 14, height: 1.5, color: Color(0xFF59675F))),
+                const SizedBox(height: 15), const Text('Review this enquiry and respond through the quotation workflow when it is enabled for your account.', style: TextStyle(fontSize: 12, color: Color(0xFF718078), height: 1.4)),
+              ]))),
+            child: Padding(padding: const EdgeInsets.all(14), child: Row(children: [
+              Container(width: 44, height: 44, decoration: BoxDecoration(color: const Color(0xFFEAF2EC), borderRadius: BorderRadius.circular(14)), child: const Icon(Icons.bolt_rounded, color: green, size: 22)),
+              const SizedBox(width: 12), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(r['subject'] ?? 'Business opportunity', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, color: ink, fontWeight: FontWeight.w900)),
+                const SizedBox(height: 4), Text(company?.toString() ?? 'DISCOVERLY network', style: const TextStyle(fontSize: 11, color: Color(0xFF718078))),
+              ])),
+              const SizedBox(width: 6), _StatusPill(status: (r['status'] ?? 'new').toString()), const Icon(Icons.chevron_right_rounded, color: Color(0xFF9AA69F)),
             ])),
-            _StatusPill(status: (r['status'] ?? 'new').toString()),
-          ]),
-          const SizedBox(height: 10), Text(r['message'] ?? 'No additional details provided.', style: const TextStyle(fontSize: 11, height: 1.4, color: Color(0xFF718078))),
-          const SizedBox(height: 9), const Divider(height: 1, color: Color(0xFFE9EEEA)),
-          const SizedBox(height: 8), const Row(children: [Icon(Icons.auto_awesome_outlined, size: 13, color: gold), SizedBox(width: 5), Text('DISCOVERLY MATCH', style: TextStyle(fontSize: 8, letterSpacing: .8, color: Color(0xFF718078), fontWeight: FontWeight.w900))]),
-        ]));
-      }),
-    ]));
+          ));
+        }),
+      ]));
+  }
+}
+
+class _MetricTile extends StatelessWidget {
+  final String label, value;
+  final IconData icon;
+  const _MetricTile({required this.label, required this.value, required this.icon});
+  @override Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(13),
+    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFE4EBE6))),
+    child: Row(children: [
+      Container(width: 37, height: 37, decoration: BoxDecoration(color: const Color(0xFFEAF2EC), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: green, size: 19)),
+      const SizedBox(width: 9), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(label, style: const TextStyle(fontSize: 8, letterSpacing: .5, color: Color(0xFF718078), fontWeight: FontWeight.w900)),
+        const SizedBox(height: 3), Text(value, style: const TextStyle(fontSize: 20, color: ink, fontWeight: FontWeight.w900)),
+      ])),
+    ]),
+  );
 }
 
 class _SectionHeading extends StatelessWidget {
