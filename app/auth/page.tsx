@@ -17,8 +17,9 @@ export default function AuthPage(){
  useEffect(()=>{
   const params=new URLSearchParams(window.location.search);
   const target=params.get("next");
-  const safe=target&&target.startsWith("/")&&!target.startsWith("//")?target:"/business/register";
+  const safe=target&&target.startsWith("/")&&!target.startsWith("//")?target:"/account";
   setNextPath(safe);
+  if(params.get("mode")==="login")setMode("login");
   if(params.get("error")==="verification")setError("Email verification link could not be completed. Please sign in and try again.");
   const sb=createClient();
   if(sb)void sb.auth.getUser().then(({data})=>{if(data.user)router.replace(safe);});
