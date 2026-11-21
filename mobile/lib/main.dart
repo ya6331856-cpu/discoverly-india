@@ -184,30 +184,22 @@ class BusinessTile extends StatelessWidget {
   @override Widget build(BuildContext context) {
     final title = item['display_name'] ?? item['name'] ?? item['legal_name'] ?? 'Business';
     final desc = item['description'] ?? 'Business profile';
-    return Card(child: Padding(
-      padding: const EdgeInsets.all(17),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 11), padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(21), border: Border.all(color: const Color(0xFFE5ECE7))),
       child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Container(width: 54, height: 54, decoration: BoxDecoration(
-          gradient: const LinearGradient(colors: [Color(0xFFE7F5EF), Color(0xFFD8EEE4)]),
-          borderRadius: BorderRadius.circular(17),
-        ), child: const Icon(Icons.storefront_rounded, color: green, size: 27)),
-        const SizedBox(width: 14),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('$title', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17, color: ink)),
-          const SizedBox(height: 6),
-          Text('$desc', maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFF69766F), fontSize: 14, height: 1.4)),
-          if (item['city'] != null) Padding(
-            padding: const EdgeInsets.only(top: 10),
-            child: Row(children: [
-              const Icon(Icons.location_on_outlined, size: 15, color: green),
-              const SizedBox(width: 4),
-              Text('${item['city']}', style: const TextStyle(fontSize: 13, color: green, fontWeight: FontWeight.w700)),
-            ]),
-          ),
+        Container(width: 55, height: 55, decoration: BoxDecoration(color: const Color(0xFFE5F2EB), borderRadius: BorderRadius.circular(17)), child: const Icon(Icons.storefront_rounded, color: green, size: 27)),
+        const SizedBox(width: 14), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('$title', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: ink)),
+          const SizedBox(height: 5), Text('$desc', maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, height: 1.4, color: Color(0xFF718078))),
+          if (item['city'] != null) Padding(padding: const EdgeInsets.only(top: 9), child: Row(children: [
+            const Icon(Icons.location_on_outlined, size: 15, color: green), const SizedBox(width: 3),
+            Text(item['city'].toString(), style: const TextStyle(fontSize: 12, color: green, fontWeight: FontWeight.w800)),
+          ])),
         ])),
-        const Icon(Icons.arrow_forward_ios_rounded, size: 15, color: Color(0xFF9AA8A1)),
+        const Icon(Icons.arrow_forward_ios_rounded, size: 15, color: Color(0xFF718078)),
       ]),
-    ));
+    );
   }
 }
 
