@@ -22,13 +22,51 @@ class DiscoverlyApp extends StatelessWidget {
   Widget build(BuildContext context) => MaterialApp(
     title: 'DISCOVERLY',
     debugShowCheckedModeBanner: false,
-    theme: ThemeData(useMaterial3: true, scaffoldBackgroundColor: canvas,
-      colorScheme: ColorScheme.fromSeed(seedColor: green, brightness: Brightness.light),
-      appBarTheme: const AppBarTheme(backgroundColor: canvas, foregroundColor: ink, elevation: 0),
-      inputDecorationTheme: InputDecorationTheme(filled: true, fillColor: Colors.white,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15)),
-      cardTheme: CardThemeData(color: Colors.white, elevation: 0, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)))),
+    theme: ThemeData(
+      useMaterial3: true,
+      scaffoldBackgroundColor: const Color(0xFFF3F6F4),
+      colorScheme: ColorScheme.fromSeed(seedColor: green, brightness: Brightness.light).copyWith(
+        primary: green, surface: Colors.white, secondary: gold,
+      ),
+      textTheme: const TextTheme(
+        headlineLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: ink, height: 1.12, letterSpacing: -0.8),
+        headlineMedium: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: ink, height: 1.15, letterSpacing: -0.5),
+        titleLarge: TextStyle(fontSize: 21, fontWeight: FontWeight.w800, color: ink),
+        titleMedium: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: ink),
+        bodyLarge: TextStyle(fontSize: 16, color: ink, height: 1.45),
+        bodyMedium: TextStyle(fontSize: 14, color: Color(0xFF66736E), height: 1.45),
+        labelLarge: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: Color(0xFFF3F6F4), foregroundColor: ink, elevation: 0,
+        centerTitle: false, titleTextStyle: TextStyle(fontSize: 21, fontWeight: FontWeight.w900, color: ink, letterSpacing: 0.4),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true, fillColor: Colors.white,
+        hintStyle: const TextStyle(fontSize: 15, color: Color(0xFF8A9690)),
+        labelStyle: const TextStyle(fontSize: 15, color: Color(0xFF66736E)),
+        prefixIconColor: green,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(17), borderSide: const BorderSide(color: Color(0xFFE5ECE8))),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(17), borderSide: const BorderSide(color: Color(0xFFE5ECE8))),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(17), borderSide: const BorderSide(color: green, width: 1.5)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 19),
+      ),
+      cardTheme: CardThemeData(
+        color: Colors.white, elevation: 1, shadowColor: const Color(0x140D3025),
+        margin: const EdgeInsets.only(bottom: 12),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22), side: const BorderSide(color: Color(0xFFEAF0EC))),
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        height: 76, backgroundColor: Colors.white, elevation: 10,
+        indicatorColor: const Color(0xFFE4F2EC),
+        labelTextStyle: WidgetStateProperty.all(const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+      ),
+      filledButtonTheme: FilledButtonThemeData(style: FilledButton.styleFrom(
+        backgroundColor: green, foregroundColor: Colors.white, minimumSize: const Size(0, 54),
+        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      )),
+    ),
     home: supabase.auth.currentSession == null ? const AuthScreen() : const MainShell(),
   );
 }
@@ -83,10 +121,37 @@ class _MainShellState extends State<MainShell> {
   int index = 0;
   final pages = const [DiscoverScreen(), RequirementsScreen(), OpportunitiesScreen(), ProfileScreen()];
   @override Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('DISCOVERLY', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.1)), actions: [IconButton(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen())), icon: const Icon(Icons.notifications_none_rounded))]),
+    appBar: AppBar(
+      toolbarHeight: 68,
+      title: Row(children: [
+        Container(width: 38, height: 38, decoration: BoxDecoration(
+          gradient: const LinearGradient(colors: [green, Color(0xFF075642)]),
+          borderRadius: BorderRadius.circular(13),
+        ), child: const Icon(Icons.travel_explore_rounded, color: Colors.white, size: 22)),
+        const SizedBox(width: 11),
+        const Text('DISCOVERLY'),
+      ]),
+      actions: [
+        IconButton(
+          tooltip: 'Notifications',
+          style: IconButton.styleFrom(backgroundColor: Colors.white, foregroundColor: ink),
+          onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen())),
+          icon: const Icon(Icons.notifications_none_rounded, size: 25),
+        ),
+        const SizedBox(width: 12),
+      ],
+    ),
     body: IndexedStack(index: index, children: pages),
-    bottomNavigationBar: NavigationBar(selectedIndex: index, onDestinationSelected: (v) => setState(() => index = v),
-      destinations: const [NavigationDestination(icon: Icon(Icons.explore_outlined), selectedIcon: Icon(Icons.explore), label: 'Discover'), NavigationDestination(icon: Icon(Icons.assignment_outlined), label: 'Requirements'), NavigationDestination(icon: Icon(Icons.work_outline), label: 'Opportunities'), NavigationDestination(icon: Icon(Icons.person_outline), label: 'Profile')]),
+    bottomNavigationBar: NavigationBar(
+      selectedIndex: index, labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+      onDestinationSelected: (v) => setState(() => index = v),
+      destinations: const [
+        NavigationDestination(icon: Icon(Icons.explore_outlined), selectedIcon: Icon(Icons.explore), label: 'Discover'),
+        NavigationDestination(icon: Icon(Icons.assignment_outlined), selectedIcon: Icon(Icons.assignment), label: 'Requests'),
+        NavigationDestination(icon: Icon(Icons.work_outline), selectedIcon: Icon(Icons.work), label: 'Leads'),
+        NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'Profile'),
+      ],
+    ),
   );
 }
 
@@ -102,13 +167,34 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   }
   @override void initState() { super.initState(); find(); }
   @override Widget build(BuildContext context) => RefreshIndicator(onRefresh: find, child: ListView(padding: const EdgeInsets.fromLTRB(18, 8, 18, 24), children: [
-    Container(padding: const EdgeInsets.all(22), decoration: BoxDecoration(gradient: const LinearGradient(colors: [ink, Color(0xFF174E40)]), borderRadius: BorderRadius.circular(22)), child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text('Find the right\nbusiness. Faster.', style: TextStyle(color: Colors.white, fontSize: 27, height: 1.15, fontWeight: FontWeight.w800)),
-      SizedBox(height: 10), Text('Discover companies, products and services across India.', style: TextStyle(color: Colors.white70, height: 1.4))
-    ])),
-    const SizedBox(height: 18), TextField(controller: search, onSubmitted: (_) => find(), decoration: InputDecoration(hintText: 'Search business, product or service', prefixIcon: const Icon(Icons.search), suffixIcon: IconButton(onPressed: find, icon: const Icon(Icons.arrow_forward)))),
+    Container(
+      padding: const EdgeInsets.all(25),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF102C25), Color(0xFF087E63), Color(0xFF0A5C49)]),
+        borderRadius: BorderRadius.circular(27),
+        boxShadow: const [BoxShadow(color: Color(0x26087E63), blurRadius: 22, offset: Offset(0, 10))],
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+          decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.13), borderRadius: BorderRadius.circular(30)),
+          child: const Text('INDIA-WIDE BUSINESS NETWORK', style: TextStyle(color: Color(0xFFD6F4E8), fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 1.1)),
+        ),
+        const SizedBox(height: 18),
+        const Text('Discover more.\nConnect smarter.', style: TextStyle(color: Colors.white, fontSize: 31, height: 1.12, fontWeight: FontWeight.w900, letterSpacing: -0.7)),
+        const SizedBox(height: 12),
+        const Text('Find trusted businesses, services and new opportunities across India.', style: TextStyle(color: Color(0xFFD7E8E1), fontSize: 15, height: 1.5)),
+        const SizedBox(height: 18),
+        Row(children: [
+          const Icon(Icons.verified_user_outlined, color: Color(0xFFE3C27D), size: 17),
+          const SizedBox(width: 7),
+          const Text('One platform. Endless possibilities.', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+        ]),
+      ]),
+    ),
+    const SizedBox(height: 23), TextField(controller: search, onSubmitted: (_) => find(), decoration: InputDecoration(hintText: 'Search business, product or service', prefixIcon: const Icon(Icons.search), suffixIcon: IconButton(onPressed: find, icon: const Icon(Icons.arrow_forward)))),
     const SizedBox(height: 10), TextField(controller: city, onSubmitted: (_) => find(), decoration: const InputDecoration(hintText: 'City (e.g. Mumbai)', prefixIcon: Icon(Icons.location_on_outlined))),
-    const SizedBox(height: 12), const Text('Explore businesses', style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold)),
+    const SizedBox(height: 12), const Padding(padding: EdgeInsets.only(top: 12, bottom: 5), child: Text('Explore businesses', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: ink))),
     if (loading) const Padding(padding: EdgeInsets.all(28), child: Center(child: CircularProgressIndicator())),
     if (error != null) Padding(padding: const EdgeInsets.all(16), child: Text(error!, style: const TextStyle(color: Colors.red))),
     if (!loading && results.isEmpty) const Padding(padding: EdgeInsets.all(22), child: Text('Abhi koi published business nahi mila. Search change karke dekhein.')),
@@ -121,14 +207,30 @@ class BusinessTile extends StatelessWidget {
   @override Widget build(BuildContext context) {
     final title = item['display_name'] ?? item['name'] ?? item['legal_name'] ?? 'Business';
     final desc = item['description'] ?? 'Business profile';
-    return Card(margin: const EdgeInsets.only(top: 10), child: Padding(padding: const EdgeInsets.all(16), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Container(width: 46, height: 46, decoration: BoxDecoration(color: const Color(0xFFE7F3EF), borderRadius: BorderRadius.circular(14)), child: const Icon(Icons.storefront_outlined, color: green)),
-      const SizedBox(width: 13), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('$title', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)), const SizedBox(height: 5),
-        Text('$desc', maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.black54, height: 1.35)),
-        if (item['city'] != null) Padding(padding: const EdgeInsets.only(top: 7), child: Text('📍 ${item['city']}', style: const TextStyle(fontSize: 12, color: green)))
-      ]))
-    ])));
+    return Card(child: Padding(
+      padding: const EdgeInsets.all(17),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Container(width: 54, height: 54, decoration: BoxDecoration(
+          gradient: const LinearGradient(colors: [Color(0xFFE7F5EF), Color(0xFFD8EEE4)]),
+          borderRadius: BorderRadius.circular(17),
+        ), child: const Icon(Icons.storefront_rounded, color: green, size: 27)),
+        const SizedBox(width: 14),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('$title', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17, color: ink)),
+          const SizedBox(height: 6),
+          Text('$desc', maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFF69766F), fontSize: 14, height: 1.4)),
+          if (item['city'] != null) Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: Row(children: [
+              const Icon(Icons.location_on_outlined, size: 15, color: green),
+              const SizedBox(width: 4),
+              Text('${item['city']}', style: const TextStyle(fontSize: 13, color: green, fontWeight: FontWeight.w700)),
+            ]),
+          ),
+        ])),
+        const Icon(Icons.arrow_forward_ios_rounded, size: 15, color: Color(0xFF9AA8A1)),
+      ]),
+    ));
   }
 }
 
