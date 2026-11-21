@@ -23,49 +23,27 @@ class DiscoverlyApp extends StatelessWidget {
     title: 'DISCOVERLY',
     debugShowCheckedModeBanner: false,
     theme: ThemeData(
-      useMaterial3: true,
-      scaffoldBackgroundColor: const Color(0xFFF3F6F4),
-      colorScheme: ColorScheme.fromSeed(seedColor: green, brightness: Brightness.light).copyWith(
-        primary: green, surface: Colors.white, secondary: gold,
-      ),
+      useMaterial3: true, scaffoldBackgroundColor: const Color(0xFFF4F7F4),
+      colorScheme: ColorScheme.fromSeed(seedColor: green, brightness: Brightness.light).copyWith(primary: green, secondary: gold, surface: Colors.white),
       textTheme: const TextTheme(
-        headlineLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: ink, height: 1.12, letterSpacing: -0.8),
-        headlineMedium: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: ink, height: 1.15, letterSpacing: -0.5),
-        titleLarge: TextStyle(fontSize: 21, fontWeight: FontWeight.w800, color: ink),
-        titleMedium: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: ink),
+        headlineLarge: TextStyle(fontSize: 34, fontWeight: FontWeight.w900, color: ink, height: 1.08, letterSpacing: -1),
+        headlineMedium: TextStyle(fontSize: 28, fontWeight: FontWeight.w900, color: ink, height: 1.12, letterSpacing: -.6),
+        titleLarge: TextStyle(fontSize: 21, fontWeight: FontWeight.w900, color: ink),
+        titleMedium: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: ink),
         bodyLarge: TextStyle(fontSize: 16, color: ink, height: 1.45),
-        bodyMedium: TextStyle(fontSize: 14, color: Color(0xFF66736E), height: 1.45),
-        labelLarge: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+        bodyMedium: TextStyle(fontSize: 14, color: Color(0xFF718078), height: 1.45),
       ),
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Color(0xFFF3F6F4), foregroundColor: ink, elevation: 0,
-        centerTitle: false, titleTextStyle: TextStyle(fontSize: 21, fontWeight: FontWeight.w900, color: ink, letterSpacing: 0.4),
-      ),
+      appBarTheme: const AppBarTheme(backgroundColor: Color(0xFFF4F7F4), foregroundColor: ink, elevation: 0, toolbarHeight: 68, titleTextStyle: TextStyle(fontSize: 21, fontWeight: FontWeight.w900, color: ink)),
       inputDecorationTheme: InputDecorationTheme(
-        filled: true, fillColor: Colors.white,
-        hintStyle: const TextStyle(fontSize: 15, color: Color(0xFF8A9690)),
-        labelStyle: const TextStyle(fontSize: 15, color: Color(0xFF66736E)),
-        prefixIconColor: green,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(17), borderSide: const BorderSide(color: Color(0xFFE5ECE8))),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(17), borderSide: const BorderSide(color: Color(0xFFE5ECE8))),
+        filled: true, fillColor: Colors.white, hintStyle: const TextStyle(fontSize: 15, color: Color(0xFF98A39D)),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 17, vertical: 18), prefixIconColor: green,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(17), borderSide: const BorderSide(color: Color(0xFFE5ECE7))),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(17), borderSide: const BorderSide(color: Color(0xFFE5ECE7))),
         focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(17), borderSide: const BorderSide(color: green, width: 1.5)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 19),
       ),
-      cardTheme: CardThemeData(
-        color: Colors.white, elevation: 1, shadowColor: const Color(0x140D3025),
-        margin: const EdgeInsets.only(bottom: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22), side: const BorderSide(color: Color(0xFFEAF0EC))),
-      ),
-      navigationBarTheme: NavigationBarThemeData(
-        height: 76, backgroundColor: Colors.white, elevation: 10,
-        indicatorColor: const Color(0xFFE4F2EC),
-        labelTextStyle: WidgetStateProperty.all(const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
-      ),
-      filledButtonTheme: FilledButtonThemeData(style: FilledButton.styleFrom(
-        backgroundColor: green, foregroundColor: Colors.white, minimumSize: const Size(0, 54),
-        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      )),
+      cardTheme: CardThemeData(color: Colors.white, elevation: 0, margin: EdgeInsets.zero, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(21), side: const BorderSide(color: Color(0xFFE5ECE7)))),
+      filledButtonTheme: FilledButtonThemeData(style: FilledButton.styleFrom(backgroundColor: green, foregroundColor: Colors.white, minimumSize: const Size(0, 54), textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)))),
+      navigationBarTheme: NavigationBarThemeData(height: 76, backgroundColor: Colors.white, elevation: 0, indicatorColor: const Color(0xFFE5F2EB), labelTextStyle: WidgetStateProperty.all(const TextStyle(fontSize: 12, fontWeight: FontWeight.w700))),
     ),
     home: supabase.auth.currentSession == null ? const AuthScreen() : const MainShell(),
   );
@@ -95,22 +73,33 @@ class _AuthScreenState extends State<AuthScreen> {
     if (mounted) setState(() => busy = false);
   }
   @override void dispose() { email.dispose(); password.dispose(); name.dispose(); super.dispose(); }
-  @override Widget build(BuildContext context) => Scaffold(body: SafeArea(child: Center(child: SingleChildScrollView(
-    padding: const EdgeInsets.all(24), child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 460), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      const SizedBox(height: 28), Container(width: 62, height: 62, alignment: Alignment.center, decoration: BoxDecoration(color: green, borderRadius: BorderRadius.circular(20)), child: const Icon(Icons.travel_explore, color: Colors.white, size: 32)),
-      const SizedBox(height: 24), const Text('DISCOVERLY', style: TextStyle(fontSize: 29, fontWeight: FontWeight.w900, letterSpacing: 1.4, color: ink)),
-      const SizedBox(height: 8), const Text('India ka business discovery network', style: TextStyle(color: Colors.black54, fontSize: 15)),
-      const SizedBox(height: 34), Text(signup ? 'Apna account banayein' : 'Welcome back', style: const TextStyle(fontSize: 23, fontWeight: FontWeight.bold, color: ink)),
-      const SizedBox(height: 20),
-      if (signup) ...[TextField(controller: name, decoration: const InputDecoration(labelText: 'Full name')), const SizedBox(height: 12)],
-      TextField(controller: email, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'Email address')),
-      const SizedBox(height: 12), TextField(controller: password, obscureText: true, decoration: const InputDecoration(labelText: 'Password')),
-      if (error != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(error!, style: const TextStyle(color: Colors.red))),
-      if (notice != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(notice!, style: const TextStyle(color: green))),
-      const SizedBox(height: 20), FilledButton(onPressed: busy ? null : submit, style: FilledButton.styleFrom(backgroundColor: green, padding: const EdgeInsets.all(16)), child: Text(busy ? 'Please wait...' : signup ? 'Create account' : 'Login')),
-      TextButton(onPressed: () => setState(() { signup = !signup; error = null; notice = null; }), child: Text(signup ? 'Already have an account? Login' : 'New here? Create account')),
-      const SizedBox(height: 24), const Text('Secure sign-in powered by Supabase', textAlign: TextAlign.center, style: TextStyle(color: Colors.black45, fontSize: 12))
-    ]))))));
+  @override Widget build(BuildContext context) => Scaffold(
+    backgroundColor: const Color(0xFFF4F7F4),
+    body: SafeArea(child: Center(child: SingleChildScrollView(
+      padding: const EdgeInsets.all(24),
+      child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 460), child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Container(padding: const EdgeInsets.all(25), decoration: BoxDecoration(
+          gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [ink, Color(0xFF123F32), green]),
+          borderRadius: BorderRadius.circular(29), boxShadow: const [BoxShadow(color: Color(0x260C3D31), blurRadius: 24, offset: Offset(0, 12))],
+        ), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [Container(width: 46, height: 46, decoration: BoxDecoration(color: Colors.white.withValues(alpha: .14), borderRadius: BorderRadius.circular(15)), child: const Icon(Icons.travel_explore_rounded, color: Colors.white, size: 26)), const SizedBox(width: 12), const Text('DISCOVERLY', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 21, letterSpacing: 1))]),
+          const SizedBox(height: 35), Text(signup ? 'Start your\nnext connection.' : 'Discover the\nright connections.', style: const TextStyle(color: Colors.white, fontSize: 32, height: 1.12, fontWeight: FontWeight.w900, letterSpacing: -.8)),
+          const SizedBox(height: 12), const Text('India’s business discovery network. Find services, meet businesses and unlock opportunities.', style: TextStyle(color: Color(0xFFD9E9E1), fontSize: 15, height: 1.5)),
+        ])),
+        const SizedBox(height: 28), Text(signup ? 'Create your account' : 'Welcome back', style: Theme.of(context).textTheme.headlineMedium),
+        const SizedBox(height: 6), Text(signup ? 'Start discovering possibilities around you.' : 'Sign in to continue to your network.', style: Theme.of(context).textTheme.bodyMedium),
+        const SizedBox(height: 22),
+        if (signup) ...[TextField(controller: name, decoration: const InputDecoration(labelText: 'Full name', prefixIcon: Icon(Icons.person_outline))), const SizedBox(height: 12)],
+        TextField(controller: email, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(labelText: 'Email address', prefixIcon: Icon(Icons.mail_outline))),
+        const SizedBox(height: 12), TextField(controller: password, obscureText: true, decoration: const InputDecoration(labelText: 'Password', prefixIcon: Icon(Icons.lock_outline))),
+        if (error != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(error!, style: const TextStyle(color: Colors.red))),
+        if (notice != null) Padding(padding: const EdgeInsets.only(top: 12), child: Text(notice!, style: const TextStyle(color: green))),
+        const SizedBox(height: 18), FilledButton(onPressed: busy ? null : submit, child: Text(busy ? 'Please wait...' : signup ? 'Create account' : 'Sign in')),
+        const SizedBox(height: 9), OutlinedButton(onPressed: () => setState(() { signup = !signup; error = null; notice = null; }), style: OutlinedButton.styleFrom(minimumSize: const Size(0, 52), side: const BorderSide(color: Color(0xFFE5ECE7)), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))), child: Text(signup ? 'I already have an account' : 'Create a new account', style: const TextStyle(color: ink, fontWeight: FontWeight.w800))),
+        const SizedBox(height: 22), const Center(child: Text('SECURE AUTHENTICATION  •  SUPABASE', style: TextStyle(color: Color(0xFF718078), fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: .8))),
+      ])),
+    ))),
+  );
 }
 
 class MainShell extends StatefulWidget {
