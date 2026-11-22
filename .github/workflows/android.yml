@@ -41,7 +41,7 @@ jobs:
           s = p.read_text()
           permission = '<uses-permission android:name="android.permission.INTERNET"/>'
           if permission not in s:
-              s = s.replace('<application', permission + '\\n    <application', 1)
+              s = s.replace('<application', permission + '\n    <application', 1)
               p.write_text(s)
           print('INTERNET permission verified in', p)
           PY
