@@ -8,8 +8,8 @@ The GitHub Actions workflow generates the Android project, bundles Inter locally
 
 ## Google Play upload signing
 
-1. Generate a private upload keystore locally. Keep the JKS file and passwords safe; never commit them or send them in chat.
-2. Base64-encode the keystore file.
+1. In Termux/Ubuntu, run: keytool -genkeypair -v -keystore discoverly-upload-key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias discoverly-upload. Set a strong password and keep the JKS file plus passwords in a safe offline backup.
+2. Convert the keystore to one-line Base64: base64 -w 0 discoverly-upload-key.jks. Copy the full output privately; never commit the JKS or send passwords in chat.
 3. In GitHub, open the repository Settings → Secrets and variables → Actions and add these repository secrets:
    - DISCOVERLY_UPLOAD_KEYSTORE_BASE64 — base64 text of the JKS file
    - DISCOVERLY_UPLOAD_KEYSTORE_PASSWORD — keystore password
