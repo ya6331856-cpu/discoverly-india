@@ -5,7 +5,7 @@ export const metadata = {
   description: "How to request deletion of your DISCOVERLY account and associated personal data.",
 };
 
-const supportEmail = process.env.NEXT_PUBLIC_SUPPORT_EMAIL;
+const supportEmail = 'ya6331856@gmail.com';
 
 export default function DeleteAccountPage() {
   const subject = encodeURIComponent("DISCOVERLY account deletion request");
