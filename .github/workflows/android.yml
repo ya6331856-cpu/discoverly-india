@@ -88,3 +88,5 @@ jobs:
             mobile/build/app/outputs/flutter-apk/app-release.apk
             mobile/build/app/outputs/bundle/release/app-release.aab
           retention-days: 14
+
+# Manual Android rebuild trigger: 2026-11-22
