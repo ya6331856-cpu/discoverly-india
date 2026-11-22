@@ -27,6 +27,8 @@ jobs:
         with:
           flutter-version: '3.47.9'
           cache: true
+      - name: Precache Flutter Android engine artifacts
+        run: flutter precache --android
       - name: Generate Android platform files
         run: flutter create --platforms=android --org=com.discoverly .
       - name: Prepare Android release configuration
@@ -39,7 +41,7 @@ jobs:
           s = p.read_text()
           permission = '<uses-permission android:name="android.permission.INTERNET"/>'
           if permission not in s:
-              s = s.replace('<application', permission + '\n    <application', 1)
+              s = s.replace('<application', permission + '\\n    <application', 1)
               p.write_text(s)
           print('INTERNET permission verified in', p)
           PY
@@ -96,4 +98,3 @@ jobs:
             mobile/build/app/outputs/bundle/release/app-release.aab
           retention-days: 14
           if-no-files-found: warn
-
