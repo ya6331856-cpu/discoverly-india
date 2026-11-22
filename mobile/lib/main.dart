@@ -77,6 +77,33 @@ class DiscoverlyMark extends StatelessWidget {
   );
 }
 
+class TermsOfUseScreen extends StatelessWidget {
+  const TermsOfUseScreen({super.key});
+  Widget section(String heading, String body) => Padding(
+    padding: const EdgeInsets.only(bottom: 18),
+    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(heading, style: const TextStyle(fontSize: 16, color: ink, fontWeight: FontWeight.w900)),
+      const SizedBox(height: 6),
+      Text(body, style: const TextStyle(fontSize: 14, height: 1.5, color: Color(0xFF665D55))),
+    ]),
+  );
+  @override Widget build(BuildContext context) => Scaffold(
+    backgroundColor: canvas,
+    appBar: AppBar(title: const Text('Terms of Use')),
+    body: ListView(padding: const EdgeInsets.all(20), children: [
+      const Text('DISCOVERLY PLATFORM RULES', style: TextStyle(fontSize: 11, color: green, letterSpacing: 1, fontWeight: FontWeight.w900)),
+      const SizedBox(height: 8),
+      const Text('Use the network responsibly.', style: TextStyle(fontSize: 25, color: ink, height: 1.15, fontWeight: FontWeight.w900)),
+      section('Accurate information', 'You are responsible for the accuracy, legality and ownership of business details, service descriptions, contact information, requirements and quotations you submit. Do not impersonate another person or business.'),
+      section('Prohibited content', 'Do not post fake businesses, fraudulent offers, illegal goods or services, spam, duplicate listings, misleading claims, threats, harassment, hate speech, abusive content or another person’s private information without permission. Respect intellectual property and applicable law.'),
+      section('Reporting and blocking', 'You can report a business listing and block its owner. Reports are reviewed by platform moderators. We may restrict, suspend or remove content or accounts that breach these rules.'),
+      section('No transaction guarantee', 'DISCOVERLY helps users discover businesses and exchange requirements and quotations. We do not guarantee any business, service, quotation, payment, licence, credential or claim made by another user. Conduct your own checks before entering agreements or making payments.'),
+      section('Account and deletion', 'Keep your sign-in details and verification codes private. You may delete your account from Profile → Delete account. Business information may remain when another active company member continues to manage that business.'),
+      section('Changes', 'We may update these Terms as the platform changes or to meet legal and safety requirements. The current version is available on the DISCOVERLY website.'),
+    ]),
+  );
+}
+
 class TermsConsentGate extends StatelessWidget {
   const TermsConsentGate({super.key});
   @override Widget build(BuildContext context) {
@@ -135,6 +162,7 @@ class _TermsConsentScreenState extends State<TermsConsentScreen> {
         const SizedBox(height: 10),
         const Text('• Provide accurate business and contact information.\n• Do not post fake, misleading, illegal or fraudulent offers.\n• No spam, harassment, threats, hate speech or abusive content.\n• Do not share private information without permission.\n• Respect intellectual property and applicable laws.\n• DISCOVERLY may review, restrict or remove content and accounts that breach these rules.', style: TextStyle(fontSize: 14, height: 1.55, color: Color(0xFF665D55))),
         const SizedBox(height: 10),
+        TextButton.icon(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const TermsOfUseScreen())), icon: const Icon(Icons.description_outlined), label: const Text('Read full Terms of Use')),
         TextButton.icon(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen())), icon: const Icon(Icons.privacy_tip_outlined), label: const Text('Read Privacy Notice')),
       ])),
       const SizedBox(height: 14),
