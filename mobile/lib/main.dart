@@ -643,59 +643,6 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
       builder: (sheetContext) => SafeArea(child: Column(mainAxisSize: MainAxisSize.min, children: [
         const ListTile(title: Text('Why are you reporting this business?', style: TextStyle(fontWeight: FontWeight.w900))),
         for (final item in const [
-          ('fraud', 'Fraud or scam'),
-          ('misleading', 'False or misleading information'),
-          ('spam', 'Spam or duplicate listing'),
-          ('illegal', 'Illegal goods or services'),
-          ('harassment', 'Abusive or harmful content'),
-          ('other', 'Something else'),
-        ]) ListTile(title: Text(item.$2), onTap: () => Navigator.pop(sheetContext, item.$1)),
-      ])),
-    );
-    if (reason == null || !mounted) return;
-    try {
-      final user = supabase.auth.currentUser;
-      if (user == null) throw Exception('Please sign in again.');
-      await supabase.from('content_reports').insert({
-        'reporter_user_id': user.id,
-        'target_type': 'company',
-        'target_id': widget.item['company_id'].toString(),
-        'reason': reason,
-      });
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Report submitted. Our moderation team will review it.')));
-    } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not submit the report. Please try again.')));
-    }
-  }
-
-  Future<void> blockBusinessOwner() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Block this business owner?'),
-        content: const Text('Their business listings will no longer appear in your DISCOVERLY search results. You can unblock the account later from Profile → Blocked accounts.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Block owner')),
-        ],
-      ),
-    );
-    if (confirm != true || !mounted) return;
-    try {
-      await supabase.rpc('block_business_owner', params: {'p_company_id': widget.item['company_id'].toString()});
-      if (mounted) Navigator.pop(context, true);
-    } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not block this account. Please try again.')));
-    }
-  }
-
-  Future<void> reportBusiness() async {
-    final reason = await showModalBottomSheet<String>(
-      context: context,
-      showDragHandle: true,
-      builder: (sheetContext) => SafeArea(child: Column(mainAxisSize: MainAxisSize.min, children: [
-        const ListTile(title: Text('Why are you reporting this business?', style: TextStyle(fontWeight: FontWeight.w900))),
-        for (final item in const [
           ('fake_business', 'Fake business or scam'),
           ('misleading_information', 'False or misleading information'),
           ('spam', 'Spam or duplicate listing'),
@@ -1651,7 +1598,6 @@ class ProfileScreen extends StatelessWidget {
       const SizedBox(height: 8),
       _ProfileTile(icon: Icons.business_center_outlined, title: 'Business onboarding', subtitle: 'Register a business and manage services', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BusinessOnboardingScreen()))),
       _ProfileTile(icon: Icons.block_rounded, title: 'Blocked accounts', subtitle: 'Manage businesses you have blocked', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BlockedAccountsScreen()))),
-      _ProfileTile(icon: Icons.block_rounded, title: 'Blocked accounts', subtitle: 'Manage businesses you have blocked', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BlockedAccountsScreen()))),
       const SizedBox(height: 8),
       const _AdminAccessTile(),
       const SizedBox(height: 8),
@@ -1684,54 +1630,6 @@ class _ProfileTile extends StatelessWidget {
         const Icon(Icons.chevron_right_rounded, color: Color(0xFF8C8177), size: 19),
       ]),
     )),
-  );
-}
-
-class BlockedAccountsScreen extends StatefulWidget {
-  const BlockedAccountsScreen({super.key});
-  @override State<BlockedAccountsScreen> createState() => _BlockedAccountsScreenState();
-}
-class _BlockedAccountsScreenState extends State<BlockedAccountsScreen> {
-  List<Map<String, dynamic>> rows = [];
-  bool loading = true;
-  String? error;
-  @override void initState() { super.initState(); load(); }
-  Future<void> load() async {
-    try {
-      final data = await supabase.rpc('list_blocked_accounts');
-      if (mounted) setState(() { rows = List<Map<String, dynamic>>.from(data as List); loading = false; error = null; });
-    } catch (_) {
-      if (mounted) setState(() { loading = false; error = 'Blocked accounts could not be loaded.'; });
-    }
-  }
-  Future<void> unblock(String id) async {
-    final user = supabase.auth.currentUser;
-    if (user == null) return;
-    try {
-      await supabase.from('blocked_users').delete().eq('blocker_user_id', user.id).eq('blocked_user_id', id);
-      await load();
-    } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not unblock this account.')));
-    }
-  }
-  @override Widget build(BuildContext context) => Scaffold(
-    backgroundColor: canvas,
-    appBar: AppBar(title: const Text('Blocked accounts')),
-    body: loading ? const Center(child: CircularProgressIndicator(color: green))
-      : error != null ? Center(child: Text(error!, style: const TextStyle(color: Color(0xFF71675F))))
-      : rows.isEmpty ? const Center(child: Padding(padding: EdgeInsets.all(28), child: Text('You have not blocked any business owners.', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF71675F), fontSize: 15))))
-      : ListView(padding: const EdgeInsets.all(18), children: rows.map((row) {
-        final id = row['blocked_user_id'].toString();
-        return Container(margin: const EdgeInsets.only(bottom: 9), padding: const EdgeInsets.all(13), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), border: Border.all(color: const Color(0xFFEEE6DE))), child: Row(children: [
-          const Icon(Icons.block_rounded, color: Color(0xFFB33A3A)),
-          const SizedBox(width: 10),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(row['display_name']?.toString() ?? 'DISCOVERLY member', style: const TextStyle(color: ink, fontWeight: FontWeight.w900)),
-            const Text('Blocked account', style: TextStyle(color: Color(0xFF71675F), fontSize: 12)),
-          ])),
-          TextButton(onPressed: () => unblock(id), child: const Text('Unblock')),
-        ]));
-      }).toList()),
   );
 }
 
