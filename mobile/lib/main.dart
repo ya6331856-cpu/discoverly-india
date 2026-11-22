@@ -47,7 +47,7 @@ class DiscoverlyApp extends StatelessWidget {
       filledButtonTheme: FilledButtonThemeData(style: FilledButton.styleFrom(backgroundColor: green, foregroundColor: Colors.white, minimumSize: const Size(0, 54), textStyle: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)))),
       navigationBarTheme: NavigationBarThemeData(height: 80, backgroundColor: Colors.white, elevation: 0, indicatorColor: const Color(0xFFFFF0E3), labelTextStyle: WidgetStateProperty.all(const TextStyle(fontSize: 14, fontWeight: FontWeight.w700))),
     ),
-    home: supabase.auth.currentSession == null ? const AuthScreen() : const MainShell(),
+    home: supabase.auth.currentSession == null ? const AuthScreen() : const TermsConsentGate(),
   );
 }
 
@@ -77,6 +77,81 @@ class DiscoverlyMark extends StatelessWidget {
   );
 }
 
+class TermsConsentGate extends StatelessWidget {
+  const TermsConsentGate({super.key});
+  @override Widget build(BuildContext context) {
+    final user = supabase.auth.currentUser;
+    if (user == null) return const AuthScreen();
+    return FutureBuilder<Map<String, dynamic>?>(
+      future: supabase.from('profiles').select('terms_accepted_at,terms_version').eq('id', user.id).maybeSingle(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Scaffold(backgroundColor: canvas, body: Center(child: CircularProgressIndicator(color: green)));
+        }
+        final row = snapshot.data;
+        final accepted = row?['terms_accepted_at'] != null && row?['terms_version'] == '1.0';
+        if (accepted) return const MainShell();
+        return const TermsConsentScreen();
+      },
+    );
+  }
+}
+
+class TermsConsentScreen extends StatefulWidget {
+  const TermsConsentScreen({super.key});
+  @override State<TermsConsentScreen> createState() => _TermsConsentScreenState();
+}
+class _TermsConsentScreenState extends State<TermsConsentScreen> {
+  bool accepted = false, saving = false;
+  String? error;
+  Future<void> continueToApp() async {
+    if (!accepted || saving) return;
+    setState(() { saving = true; error = null; });
+    try {
+      final user = supabase.auth.currentUser;
+      if (user == null) throw Exception('Please sign in again.');
+      await supabase.from('profiles').upsert({
+        'id': user.id,
+        'terms_accepted_at': DateTime.now().toUtc().toIso8601String(),
+        'terms_version': '1.0',
+      }, onConflict: 'id');
+      if (!mounted) return;
+      Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const MainShell()), (_) => false);
+    } catch (_) {
+      if (mounted) setState(() { error = 'We could not save your acceptance. Please try again.'; saving = false; });
+    }
+  }
+  @override Widget build(BuildContext context) => Scaffold(
+    backgroundColor: canvas,
+    body: SafeArea(child: ListView(padding: const EdgeInsets.fromLTRB(22, 34, 22, 30), children: [
+      const DiscoverlyMark(size: 54),
+      const SizedBox(height: 22),
+      const Text('Before you join the network', style: TextStyle(fontSize: 27, height: 1.12, color: ink, fontWeight: FontWeight.w900)),
+      const SizedBox(height: 9),
+      const Text('Please review and accept the DISCOVERLY Terms of Use before creating business profiles or posting requirements.', style: TextStyle(fontSize: 15, height: 1.5, color: Color(0xFF71675F))),
+      const SizedBox(height: 20),
+      Container(padding: const EdgeInsets.all(17), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(18), border: Border.all(color: const Color(0xFFEEE6DE))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Text('COMMUNITY RULES', style: TextStyle(fontSize: 11, color: green, fontWeight: FontWeight.w900, letterSpacing: 1)),
+        const SizedBox(height: 10),
+        const Text('• Provide accurate business and contact information.\n• Do not post fake, misleading, illegal or fraudulent offers.\n• No spam, harassment, threats, hate speech or abusive content.\n• Do not share private information without permission.\n• Respect intellectual property and applicable laws.\n• DISCOVERLY may review, restrict or remove content and accounts that breach these rules.', style: TextStyle(fontSize: 14, height: 1.55, color: Color(0xFF665D55))),
+        const SizedBox(height: 10),
+        TextButton.icon(onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen())), icon: const Icon(Icons.privacy_tip_outlined), label: const Text('Read Privacy Notice')),
+      ])),
+      const SizedBox(height: 14),
+      CheckboxListTile(
+        value: accepted,
+        onChanged: saving ? null : (value) => setState(() => accepted = value ?? false),
+        controlAffinity: ListTileControlAffinity.leading,
+        contentPadding: EdgeInsets.zero,
+        title: const Text('I agree to the DISCOVERLY Terms of Use and community rules.', style: TextStyle(fontSize: 14, height: 1.35, color: ink, fontWeight: FontWeight.w700)),
+      ),
+      if (error != null) Padding(padding: const EdgeInsets.only(bottom: 10), child: Text(error!, style: const TextStyle(color: Color(0xFFB33A3A)))),
+      FilledButton(onPressed: accepted && !saving ? continueToApp : null, child: saving ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : const Text('Accept and continue')),
+      TextButton(onPressed: saving ? null : () async { await supabase.auth.signOut(); if (mounted) Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const AuthScreen()), (_) => false); }, child: const Text('Sign out instead')),
+    ])),
+  );
+}
+
 class AuthScreen extends StatefulWidget {
   const AuthScreen({super.key});
   @override State<AuthScreen> createState() => _AuthScreenState();
@@ -94,7 +169,7 @@ class _AuthScreenState extends State<AuthScreen> {
         if (r.session == null && mounted) setState(() => notice = 'A confirmation link has been sent to your email. Open it to continue.');
       } else {
         await supabase.auth.signInWithPassword(email: email.text.trim(), password: password.text);
-        if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainShell()));
+        if (mounted) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const TermsConsentGate()));
       }
     } on AuthException catch (e) { setState(() => error = e.message); }
       catch (e) { setState(() => error = 'Something went wrong. Check your internet connection and try again.'); }
