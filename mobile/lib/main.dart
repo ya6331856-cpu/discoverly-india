@@ -23,6 +23,7 @@ class DiscoverlyApp extends StatelessWidget {
     title: 'DISCOVERLY',
     debugShowCheckedModeBanner: false,
     theme: ThemeData(
+      fontFamily: 'Inter',
       useMaterial3: true, scaffoldBackgroundColor: const Color(0xFFFBF9F6),
       colorScheme: ColorScheme.fromSeed(seedColor: green, brightness: Brightness.light).copyWith(primary: green, secondary: gold, surface: Colors.white),
       textTheme: const TextTheme(
