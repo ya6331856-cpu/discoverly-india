@@ -907,6 +907,111 @@ class _BusinessOnboardingScreenState extends State<BusinessOnboardingScreen> {
   );
 }
 
+class _AdminAccessTile extends StatelessWidget {
+  const _AdminAccessTile();
+  @override Widget build(BuildContext context) {
+    final user = supabase.auth.currentUser;
+    if (user == null) return const SizedBox.shrink();
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: supabase.from('user_roles').select('role').eq('user_id', user.id),
+      builder: (context, snapshot) {
+        final roles = snapshot.data ?? [];
+        final allowed = roles.any((r) => r['role'] == 'admin' || r['role'] == 'moderator');
+        if (!allowed) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: _ProfileTile(
+            icon: Icons.admin_panel_settings_rounded,
+            title: 'Admin console',
+            subtitle: 'Moderation, verification and platform review',
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminConsoleScreen())),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class AdminConsoleScreen extends StatefulWidget {
+  const AdminConsoleScreen({super.key});
+  @override State<AdminConsoleScreen> createState() => _AdminConsoleScreenState();
+}
+class _AdminConsoleScreenState extends State<AdminConsoleScreen> {
+  bool loading = true;
+  String? error;
+  List<Map<String, dynamic>> companies = [];
+  List<Map<String, dynamic>> verifications = [];
+  @override void initState() { super.initState(); load(); }
+  Future<void> load() async {
+    setState(() { loading = true; error = null; });
+    try {
+      final user = supabase.auth.currentUser;
+      if (user == null) throw Exception('Please sign in again.');
+      final roles = await supabase.from('user_roles').select('role').eq('user_id', user.id);
+      if (!roles.any((r) => r['role'] == 'admin' || r['role'] == 'moderator')) {
+        throw Exception('This account does not have admin access.');
+      }
+      final results = await Future.wait([
+        supabase.from('companies').select('id,display_name,legal_name,status,created_at').eq('status','pending_review').order('created_at').limit(30),
+        supabase.from('verification_cases').select('id,company_id,verification_type,status,reference_value,document_path,submitted_at').inFilter('status',['submitted','in_review']).order('submitted_at').limit(30),
+      ]);
+      if (mounted) setState(() {
+        companies = List<Map<String, dynamic>>.from(results[0]);
+        verifications = List<Map<String, dynamic>>.from(results[1]);
+        loading = false;
+      });
+    } catch (e) { if (mounted) setState(() { error = e.toString().replaceFirst('Exception: ', ''); loading = false; }); }
+  }
+  Future<void> decideCompany(String id, String status) async {
+    try {
+      await supabase.from('companies').update({'status':status}).eq('id',id);
+      await load();
+    } catch (e) { if (mounted) setState(() => error = e.toString()); }
+  }
+  Future<void> decideVerification(String id, String status) async {
+    try {
+      await supabase.from('verification_cases').update({
+        'status':status, 'reviewer_id':supabase.auth.currentUser!.id,
+        'reviewed_at':DateTime.now().toUtc().toIso8601String(),
+      }).eq('id',id);
+      await load();
+    } catch (e) { if (mounted) setState(() => error = e.toString()); }
+  }
+  @override Widget build(BuildContext context) => Scaffold(
+    backgroundColor: canvas,
+    appBar: AppBar(title: const Text('Admin console'), actions: [IconButton(onPressed: load, icon: const Icon(Icons.refresh_rounded))]),
+    body: loading ? const Center(child: CircularProgressIndicator(color: green))
+      : RefreshIndicator(color: green, onRefresh: load, child: ListView(
+        padding: const EdgeInsets.fromLTRB(18,12,18,28),
+        children: [
+          Container(padding: const EdgeInsets.all(18), decoration: BoxDecoration(gradient: const LinearGradient(colors:[Color(0xFF211D19),Color(0xFFB94E00)]),borderRadius: BorderRadius.circular(20)), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('DISCOVERLY CONTROL CENTRE',style:TextStyle(color:Color(0xFFFFC17A),fontSize:11,fontWeight:FontWeight.w900,letterSpacing:1)),
+            const SizedBox(height:8), const Text('Platform review',style:TextStyle(color:Colors.white,fontSize:25,fontWeight:FontWeight.w900)),
+            const SizedBox(height:6), Text('${companies.length} business reviews · ${verifications.length} verification cases',style:const TextStyle(color:Color(0xFFFFE8D3),fontSize:14)),
+          ])),
+          if (error != null) Padding(padding: const EdgeInsets.only(top:12),child:Text(error!,style:const TextStyle(color:Color(0xFFB33A3A)))),
+          const SizedBox(height:20),
+          const Text('BUSINESS APPROVALS',style:TextStyle(fontSize:12,color:green,fontWeight:FontWeight.w900,letterSpacing:1)),
+          const SizedBox(height:9),
+          if (companies.isEmpty) const Text('No businesses waiting for review.',style:TextStyle(color:Color(0xFF71675F))),
+          ...companies.map((c) => Container(margin:const EdgeInsets.only(bottom:9),padding:const EdgeInsets.all(13),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(16),border:Border.all(color:const Color(0xFFEEE6DE))),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+            Text((c['display_name'] ?? c['legal_name'] ?? 'Business').toString(),style:const TextStyle(fontSize:16,fontWeight:FontWeight.w900,color:ink)),
+            const SizedBox(height:8),Row(children:[Expanded(child:OutlinedButton(onPressed:()=>decideCompany(c['id'].toString(),'rejected'),child:const Text('Reject'))),const SizedBox(width:8),Expanded(child:FilledButton(onPressed:()=>decideCompany(c['id'].toString(),'published'),child:const Text('Publish')))]),
+          ]))),
+          const SizedBox(height:14),
+          const Text('VERIFICATION QUEUE',style:TextStyle(fontSize:12,color:green,fontWeight:FontWeight.w900,letterSpacing:1)),
+          const SizedBox(height:9),
+          if (verifications.isEmpty) const Text('No verification cases waiting.',style:TextStyle(color:Color(0xFF71675F))),
+          ...verifications.map((v) => Container(margin:const EdgeInsets.only(bottom:9),padding:const EdgeInsets.all(13),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(16),border:Border.all(color:const Color(0xFFEEE6DE))),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+            Text((v['verification_type'] ?? 'Business verification').toString().replaceAll('_',' ').toUpperCase(),style:const TextStyle(fontSize:14,fontWeight:FontWeight.w900,color:ink)),
+            if (v['reference_value'] != null) Padding(padding:const EdgeInsets.only(top:4),child:Text(v['reference_value'].toString(),style:const TextStyle(color:Color(0xFF71675F),fontSize:12))),
+            const SizedBox(height:8),Row(children:[Expanded(child:OutlinedButton(onPressed:()=>decideVerification(v['id'].toString(),'rejected'),child:const Text('Reject'))),const SizedBox(width:8),Expanded(child:FilledButton(onPressed:()=>decideVerification(v['id'].toString(),'verified'),child:const Text('Verify')))]),
+          ]))),
+        ],
+      )),
+  );
+}
+
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
   @override Widget build(BuildContext context) {
@@ -940,7 +1045,7 @@ class ProfileScreen extends StatelessWidget {
       const SizedBox(height: 8),
       _ProfileTile(icon: Icons.business_center_outlined, title: 'Business onboarding', subtitle: 'Register a business and manage services', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BusinessOnboardingScreen()))),
       const SizedBox(height: 8),
-      _ProfileTile(icon: Icons.shield_outlined, title: 'Privacy & security', subtitle: 'Authentication and account protection', onTap: () => showDialog(context: context, builder: (_) => AlertDialog(title: const Text('Account security'), content: Text('Signed in as ' + (user?.email ?? 'your account') + '. Authentication is managed securely by Supabase.'), actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close'))]))),
+      const _AdminAccessTile(),\n      const SizedBox(height: 8),\n      _ProfileTile(icon: Icons.shield_outlined, title: 'Privacy & security', subtitle: 'Authentication and account protection', onTap: () => showDialog(context: context, builder: (_) => AlertDialog(title: const Text('Account security'), content: Text('Signed in as ' + (user?.email ?? 'your account') + '. Authentication is managed securely by Supabase.'), actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close'))]))),
       const SizedBox(height: 20),
       OutlinedButton.icon(onPressed: () async { await supabase.auth.signOut(); if (context.mounted) Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const AuthScreen()), (_) => false); }, icon: const Icon(Icons.logout_rounded, size: 18), label: const Text('Sign out'), style: OutlinedButton.styleFrom(foregroundColor: const Color(0xFFB33A3A), minimumSize: const Size(0, 49), side: const BorderSide(color: Color(0xFFEBD4D4)), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)))),
       const SizedBox(height: 17), const Center(child: Text('DISCOVERLY  •  CONNECT WITH POSSIBILITY', style: TextStyle(color: Color(0xFF8A7D73), fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: .8))),
