@@ -43,7 +43,7 @@ class DiscoverlyApp extends StatelessWidget {
       ),
       cardTheme: CardThemeData(color: Colors.white, elevation: 0, margin: EdgeInsets.zero, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(21), side: const BorderSide(color: Color(0xFFEEE6DE)))),
       filledButtonTheme: FilledButtonThemeData(style: FilledButton.styleFrom(backgroundColor: green, foregroundColor: Colors.white, minimumSize: const Size(0, 54), textStyle: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)))),
-      navigationBarTheme: NavigationBarThemeData(height: 80, backgroundColor: Colors.white, elevation: 0, indicatorColor: const Color(0xFFE5F2EB), labelTextStyle: WidgetStateProperty.all(const TextStyle(fontSize: 14, fontWeight: FontWeight.w700))),
+      navigationBarTheme: NavigationBarThemeData(height: 80, backgroundColor: Colors.white, elevation: 0, indicatorColor: const Color(0xFFFFF0E3), labelTextStyle: WidgetStateProperty.all(const TextStyle(fontSize: 14, fontWeight: FontWeight.w700))),
     ),
     home: supabase.auth.currentSession == null ? const AuthScreen() : const MainShell(),
   );
@@ -60,14 +60,14 @@ class DiscoverlyMark extends StatelessWidget {
       gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight,
         colors: [Color(0xFF171717), Color(0xFF33302C)]),
       border: Border.all(color: const Color(0x99F28A19), width: 1),
-      boxShadow: const [BoxShadow(color: Color(0x26087E63), blurRadius: 12, offset: Offset(0, 4))],
+      boxShadow: const [BoxShadow(color: Color(0x26ED7900), blurRadius: 12, offset: Offset(0, 4))],
     ),
     child: Stack(alignment: Alignment.center, children: [
       Container(width: size * .67, height: size * .67,
         decoration: BoxDecoration(shape: BoxShape.circle,
-          border: Border.all(color: const Color(0x99D9B66E), width: 1.1))),
+          border: Border.all(color: const Color(0x99F28A19), width: 1.1))),
       Transform.rotate(angle: -.55,
-        child: Icon(Icons.navigation_rounded, size: size * .48, color: const Color(0xFFF4E5C3))),
+        child: Icon(Icons.navigation_rounded, size: size * .48, color: const Color(0xFFFFF6EA))),
       Positioned(right: size * .19, top: size * .17,
         child: Container(width: size * .10, height: size * .10,
           decoration: const BoxDecoration(color: Color(0xFFFFA33D), shape: BoxShape.circle))),
@@ -109,7 +109,7 @@ class _AuthScreenState extends State<AuthScreen> {
           borderRadius: BorderRadius.circular(23),
         ), child: Stack(children: [
           Positioned(right: -45, top: -90, child: Container(width: 230, height: 230, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.white.withValues(alpha: .09), width: 24)))),
-          Positioned(right: 34, top: 23, child: Container(width: 95, height: 95, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: const Color(0x66E7C987), width: 1.2)))),
+          Positioned(right: 34, top: 23, child: Container(width: 95, height: 95, decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: const Color(0x66FFFFFF), width: 1.2)))),
           Padding(padding: const EdgeInsets.all(19), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(children: [
               const DiscoverlyMark(size: 40),
