@@ -13,9 +13,9 @@ type ImportItem={id:string;business_name:string;city:string|null;state:string|nu
 type ImportBatch={id:string;status:string;file_name:string|null;input_count:number;staged_count:number;duplicate_count:number;rejected_count:number;approved_count:number;created_at:string};
 function parseCsv(text:string):Record<string,string>[]{
   const rows:string[][]=[];let row:string[]=[];let cell="";let quoted=false;
-  for(let i=0;i<text.length;i++){const ch=text[i];if(ch==='"'){if(quoted&&text[i+1]==='"'){cell+='"';i++;}else quoted=!quoted;}else if(ch===','&&!quoted){row.push(cell);cell="";}else if((ch==='\\n'||ch==='\\r')&&!quoted){if(ch==='\\r'&&text[i+1]==='\\n')i++;row.push(cell);if(row.some(v=>v.trim()))rows.push(row);row=[];cell="";}else cell+=ch;}
+  for(let i=0;i<text.length;i++){const ch=text[i];if(ch==='"'){if(quoted&&text[i+1]==='"'){cell+='"';i++;}else quoted=!quoted;}else if(ch===','&&!quoted){row.push(cell);cell="";}else if((ch==='\n'||ch==='\r')&&!quoted){if(ch==='\r'&&text[i+1]==='\n')i++;row.push(cell);if(row.some(v=>v.trim()))rows.push(row);row=[];cell="";}else cell+=ch;}
   row.push(cell);if(row.some(v=>v.trim()))rows.push(row);if(rows.length<2)return [];
-  const headers=rows[0].map(h=>h.trim().toLowerCase().replace(/[\\s-]+/g,"_"));
+  const headers=rows[0].map(h=>h.trim().toLowerCase().replace(/[\s-]+/g,"_"));
   return rows.slice(1).map(values=>Object.fromEntries(headers.map((h,i)=>[h,(values[i]||"").trim()])));
 }
 
