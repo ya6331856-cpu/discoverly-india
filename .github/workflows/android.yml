@@ -16,9 +16,9 @@ jobs:
         working-directory: mobile
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Set up Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
@@ -52,6 +52,8 @@ jobs:
           PY
       - name: Generate Android platform files
         run: flutter create --platforms=android --org=com.discoverly .
+      - name: Prepare Android release configuration
+        run: python3 tooling/prepare_android.py
       - name: Ensure Android internet permission
         run: |
           python3 - <<'PY'
@@ -80,11 +82,33 @@ jobs:
         run: flutter pub get
       - name: Apply Android launcher icon
         run: dart run flutter_launcher_icons
+      - name: Configure Play upload signing (GitHub Secrets)
+        env:
+          UPLOAD_KEYSTORE_BASE64: ${{ secrets.DISCOVERLY_UPLOAD_KEYSTORE_BASE64 }}
+          UPLOAD_KEYSTORE_PASSWORD: ${{ secrets.DISCOVERLY_UPLOAD_KEYSTORE_PASSWORD }}
+          UPLOAD_KEY_ALIAS: ${{ secrets.DISCOVERLY_UPLOAD_KEY_ALIAS }}
+          UPLOAD_KEY_PASSWORD: ${{ secrets.DISCOVERLY_UPLOAD_KEY_PASSWORD }}
+        run: |
+          if [ -n "$UPLOAD_KEYSTORE_BASE64" ] && [ -n "$UPLOAD_KEYSTORE_PASSWORD" ] && [ -n "$UPLOAD_KEY_ALIAS" ] && [ -n "$UPLOAD_KEY_PASSWORD" ]; then
+            echo "$UPLOAD_KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
+            cat > android/key.properties <<EOF
+          storePassword=$UPLOAD_KEYSTORE_PASSWORD
+          keyPassword=$UPLOAD_KEY_PASSWORD
+          keyAlias=$UPLOAD_KEY_ALIAS
+          storeFile=upload-keystore.jks
+          EOF
+            echo "HAS_UPLOAD_KEY=true" >> "$GITHUB_ENV"
+            echo "Play upload signing configured."
+          else
+            echo "HAS_UPLOAD_KEY=false" >> "$GITHUB_ENV"
+            echo "::warning::Upload signing secrets are not configured. APK will be built for device QA; Play AAB will be skipped."
+          fi
       - name: Analyze
         run: flutter analyze --no-fatal-infos
       - name: Build release APK for device QA
         run: flutter build apk --release
-      - name: Build release Android App Bundle for Play testing
+      - name: Build signed Android App Bundle for Google Play
+        if: env.HAS_UPLOAD_KEY == 'true'
         run: flutter build appbundle --release
       - name: Upload Android build artifacts
         uses: actions/upload-artifact@v4
@@ -94,7 +118,5 @@ jobs:
             mobile/build/app/outputs/flutter-apk/app-release.apk
             mobile/build/app/outputs/bundle/release/app-release.aab
           retention-days: 14
+          if-no-files-found: warn
 
-# Manual Android rebuild trigger: 2026-11-22
-
-# Rebuild after Dart syntax correction
