@@ -79,7 +79,7 @@ export default function AdminPage(){
       if(!rows.length)throw new Error("No business_name/name/company_name column or valid rows found.");
       const {data:batch,error:batchError}=await sb.from("data_import_batches").insert({source_id:selectedSource,created_by:userId,status:"created",file_name:file.name,input_count:rows.length}).select("id").single();
       if(batchError)throw batchError;
-      let totals={staged_count:0,duplicate_count:0,rejected_count:0};
+      const totals={staged_count:0,duplicate_count:0,rejected_count:0};
       for(let i=0;i<rows.length;i+=200){
         const {data,error:stageError}=await sb.rpc("admin_stage_business_import_rows",{p_batch_id:batch.id,p_rows:rows.slice(i,i+200)});
         if(stageError)throw stageError;
@@ -92,7 +92,7 @@ export default function AdminPage(){
   }
   async function reviewImportItem(item:ImportItem,decision:"approve"|"reject"|"duplicate"){
     const sb=createClient();if(!sb)return;setBusyId(item.id);setError("");setNotice("");
-    const {data,error:reviewError}=await sb.rpc("admin_review_business_import",{p_staging_id:item.id,p_decision:decision,p_review_note:notes[item.id]?.trim()||null});
+    const {error:reviewError}=await sb.rpc("admin_review_business_import",{p_staging_id:item.id,p_decision:decision,p_review_note:notes[item.id]?.trim()||null});
     setBusyId("");if(reviewError){setError(reviewError.message);return;}
     setNotice(decision==="approve"?"Imported business saved as a private draft. Owner confirmation is required before publication.":`Import record marked ${decision}.`);
     await load();
