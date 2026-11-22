@@ -96,3 +96,5 @@ jobs:
           retention-days: 14
 
 # Manual Android rebuild trigger: 2026-11-22
+
+# Rebuild after Dart syntax correction
