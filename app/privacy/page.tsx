@@ -5,7 +5,7 @@ export const metadata = {
   description: "How DISCOVERLY collects, uses and protects account and marketplace information.",
 };
 
-const supportEmail = process.env.NEXT_PUBLIC_SUPPORT_EMAIL;
+const supportEmail = 'ya6331856@gmail.com';
 
 export default function PrivacyPage() {
   return <main style={{maxWidth:860,margin:"0 auto",padding:"48px 22px 80px",color:"#201d19",lineHeight:1.65}}>
