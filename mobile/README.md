@@ -26,6 +26,6 @@ The app uses the existing DISCOVERLY Supabase project. The publishable key is in
 
 ## Current app scope and release caveats
 
-Email/password authentication, business discovery, requirements, leads, quotations, notifications, business onboarding, and the admin queue are implemented to MVP level. Real-account end-to-end testing is still required. The marketplace currently has no imported/published business inventory, so discovery starts empty until real businesses onboard or approved data is imported and owner-confirmed. Do not use fake listings or reviews.
+Email/password authentication, mandatory Terms acceptance, business discovery and detail profiles, requirements, leads, quotations, notifications, business onboarding, report/block controls, blocked-account management, profile editing, account deletion and the admin moderation queue are implemented to MVP level. Real-account end-to-end testing is still required. The marketplace currently has no imported/published business inventory, so discovery starts empty until real businesses onboard or approved data is imported and owner-confirmed. Do not use fake listings or reviews.
 
 Before public release, complete the Play Console privacy policy, account deletion, Data safety, content rating, store listing, and testing declarations. Verify all account-deletion paths and the live privacy/deletion URLs before submission.
