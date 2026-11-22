@@ -19,7 +19,6 @@
 - [ ] Upload the signed AAB to Internal testing first.
 - [ ] Verify users must accept Terms of Use before posting, can report content, can block/unblock business owners, and moderators can review reports.
 - [ ] Complete Store listing: short description, full description, 512×512 icon, feature graphic 1024×500, phone screenshots, contact email and website.
-- [ ] Configure NEXT_PUBLIC_SUPPORT_EMAIL in the website hosting environment with the approved public contact email; redeploy the website.
 - [ ] Verify the live /privacy, /terms and /delete-account pages on the deployed public domain.
 - [ ] Add the live Privacy Policy URL and external Account Deletion URL.
 - [ ] Complete App access instructions for reviewers (provide a test account if login is required; never share a personal/admin account).
