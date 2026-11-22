@@ -28,7 +28,9 @@ if (keystorePropertiesFile.exists()) {
 }
 
 '''
-    build = build.replace('plugins {', setup + 'plugins {', 1)
+    if 'android {' not in build:
+        raise SystemExit("Android block not found")
+    build = build.replace('android {', setup + 'android {', 1)
 
 signing = '''signingConfigs {
     create("release") {
