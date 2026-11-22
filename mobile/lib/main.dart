@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 const supabaseUrl = 'https://nkxnexjwbdopycvxwomn.supabase.co';
 const supabaseKey = 'sb_publishable_IXs7KmrWzr1eIxwUnFeX8Q_9gNgow0S';
@@ -502,6 +503,146 @@ class _CompactEmpty extends StatelessWidget {
     ])),
   ]));
 }
+class BusinessDetailsScreen extends StatefulWidget {
+  final Map<String, dynamic> item;
+  const BusinessDetailsScreen({super.key, required this.item});
+  @override State<BusinessDetailsScreen> createState() => _BusinessDetailsScreenState();
+}
+class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
+  Map<String, dynamic> company = {}, profile = {}, location = {};
+  List<Map<String, dynamic>> offerings = [];
+  bool loading = true;
+  String? error;
+
+  @override void initState() { super.initState(); load(); }
+  Future<void> load() async {
+    try {
+      final id = widget.item['company_id']?.toString();
+      if (id == null || id.isEmpty) throw Exception('Business record is unavailable.');
+      final c = await supabase.from('companies')
+        .select('id,display_name,description,website_url,created_at')
+        .eq('id', id).eq('status', 'published').maybeSingle();
+      if (c == null) throw Exception('This business listing is no longer available.');
+      final p = await supabase.from('company_profiles')
+        .select('tagline,public_phone,public_email,whatsapp_url,profile_completeness')
+        .eq('company_id', id).maybeSingle();
+      final l = await supabase.from('public_company_locations')
+        .select('city,state,locality').eq('company_id', id).limit(1).maybeSingle();
+      final o = await supabase.from('offerings')
+        .select('id,title,description,price_from,price_to,currency,unit_label')
+        .eq('company_id', id).eq('is_published', true).order('created_at', ascending: false).limit(20);
+      if (!mounted) return;
+      setState(() {
+        company = Map<String, dynamic>.from(c);
+        profile = p == null ? {} : Map<String, dynamic>.from(p);
+        location = l == null ? {} : Map<String, dynamic>.from(l);
+        offerings = List<Map<String, dynamic>>.from(o);
+        loading = false;
+      });
+    } catch (e) {
+      if (mounted) setState(() { error = e.toString().replaceFirst('Exception: ', ''); loading = false; });
+    }
+  }
+
+  Future<void> openExternal(String value, String type) async {
+    try {
+      Uri uri;
+      if (type == 'phone') {
+        uri = Uri(scheme: 'tel', path: value);
+      } else if (type == 'email') {
+        uri = Uri(scheme: 'mailto', path: value);
+      } else {
+        final normalized = value.startsWith('http://') || value.startsWith('https://') ? value : 'https://' + value;
+        uri = Uri.parse(normalized);
+      }
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not open this contact on your device.')));
+    }
+  }
+
+  @override Widget build(BuildContext context) {
+    final title = (company['display_name'] ?? widget.item['display_name'] ?? 'Business').toString();
+    final description = (company['description'] ?? widget.item['description'] ?? '').toString();
+    final city = (location['city'] ?? widget.item['city'] ?? '').toString();
+    final state = (location['state'] ?? widget.item['state'] ?? '').toString();
+    final categories = widget.item['category_names'] is List ? List<String>.from((widget.item['category_names'] as List).map((e) => e.toString())) : <String>[];
+    final initials = title.trim().isEmpty ? 'B' : title.trim()[0].toUpperCase();
+    return Scaffold(
+      backgroundColor: canvas,
+      appBar: AppBar(title: const Text('Business profile')),
+      body: loading ? const Center(child: CircularProgressIndicator(color: green))
+        : error != null ? Center(child: Padding(padding: const EdgeInsets.all(24), child: Text(error!, textAlign: TextAlign.center, style: const TextStyle(color: Color(0xFF71675F), fontSize: 15))))
+        : ListView(padding: const EdgeInsets.fromLTRB(18, 10, 18, 30), children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF211D19), Color(0xFFD96300)]),
+              borderRadius: BorderRadius.circular(22),
+            ),
+            child: Row(children: [
+              Container(width: 66, height: 66, alignment: Alignment.center,
+                decoration: BoxDecoration(color: Colors.white.withValues(alpha: .13), borderRadius: BorderRadius.circular(18), border: Border.all(color: const Color(0x55FFFFFF))),
+                child: Text(initials, style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w900))),
+              const SizedBox(width: 14),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                const Text('DISCOVERLY BUSINESS', style: TextStyle(color: Color(0xFFFFC17A), fontSize: 10, letterSpacing: 1, fontWeight: FontWeight.w900)),
+                const SizedBox(height: 5),
+                Text(title, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontSize: 20, height: 1.15, fontWeight: FontWeight.w900)),
+                if (city.isNotEmpty || state.isNotEmpty) Padding(padding: const EdgeInsets.only(top: 6), child: Text([city,state].where((e) => e.isNotEmpty).join(', '), style: const TextStyle(color: Color(0xFFFFE8D3), fontSize: 13))),
+              ])),
+            ]),
+          ),
+          if (categories.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            Wrap(spacing: 7, runSpacing: 7, children: categories.map((c) => Chip(label: Text(c), backgroundColor: Colors.white, side: const BorderSide(color: Color(0xFFEEE6DE)))).toList()),
+          ],
+          if ((profile['tagline'] ?? '').toString().isNotEmpty || description.isNotEmpty) ...[
+            const SizedBox(height: 18),
+            const Text('ABOUT THIS BUSINESS', style: TextStyle(fontSize: 11, color: green, letterSpacing: 1, fontWeight: FontWeight.w900)),
+            const SizedBox(height: 7),
+            Text((profile['tagline'] ?? description).toString(), style: const TextStyle(fontSize: 15, height: 1.5, color: Color(0xFF665D55))),
+          ],
+          const SizedBox(height: 20),
+          const Text('CONTACT & LOCATION', style: TextStyle(fontSize: 11, color: green, letterSpacing: 1, fontWeight: FontWeight.w900)),
+          const SizedBox(height: 10),
+          if (city.isNotEmpty || state.isNotEmpty) _DetailRow(icon: Icons.location_on_outlined, title: 'Location', value: [city,state].where((e) => e.isNotEmpty).join(', ')),
+          if ((profile['public_phone'] ?? '').toString().isNotEmpty) _DetailRow(icon: Icons.phone_outlined, title: 'Phone', value: profile['public_phone'].toString(), onTap: () => openExternal(profile['public_phone'].toString(), 'phone')),
+          if ((profile['public_email'] ?? '').toString().isNotEmpty) _DetailRow(icon: Icons.mail_outline_rounded, title: 'Email', value: profile['public_email'].toString(), onTap: () => openExternal(profile['public_email'].toString(), 'email')),
+          if ((company['website_url'] ?? widget.item['website_url'] ?? '').toString().isNotEmpty) _DetailRow(icon: Icons.language_rounded, title: 'Website', value: (company['website_url'] ?? widget.item['website_url']).toString(), onTap: () => openExternal((company['website_url'] ?? widget.item['website_url']).toString(), 'web')),
+          if ((profile['whatsapp_url'] ?? '').toString().isNotEmpty) Padding(padding: const EdgeInsets.only(top: 8), child: OutlinedButton.icon(onPressed: () => openExternal(profile['whatsapp_url'].toString(), 'web'), icon: const Icon(Icons.chat_bubble_outline_rounded), label: const Text('Contact on WhatsApp'))),
+          const SizedBox(height: 22),
+          Row(children: [const Expanded(child: Text('Services & offerings', style: TextStyle(fontSize: 18, color: ink, fontWeight: FontWeight.w900))), Text(offerings.length.toString(), style: const TextStyle(color: green, fontWeight: FontWeight.w900))]),
+          const SizedBox(height: 10),
+          if (offerings.isEmpty) Container(padding: const EdgeInsets.all(15), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFEEE6DE))), child: const Text('No published services or products have been added yet.', style: TextStyle(fontSize: 14, color: Color(0xFF71675F)))),
+          ...offerings.map((o) => Container(margin: const EdgeInsets.only(bottom: 9), padding: const EdgeInsets.all(14), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFEEE6DE))), child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(o['title']?.toString() ?? 'Offering', style: const TextStyle(fontSize: 16, color: ink, fontWeight: FontWeight.w900)),
+            if ((o['description'] ?? '').toString().isNotEmpty) Padding(padding: const EdgeInsets.only(top: 5), child: Text(o['description'].toString(), style: const TextStyle(fontSize: 13, height: 1.4, color: Color(0xFF71675F)))),
+            if (o['price_from'] != null) Padding(padding: const EdgeInsets.only(top: 7), child: Text('From ' + (o['currency'] ?? 'INR').toString() + ' ' + o['price_from'].toString() + (o['unit_label'] == null ? '' : ' / ' + o['unit_label'].toString()), style: const TextStyle(fontSize: 14, color: green, fontWeight: FontWeight.w900))),
+          ]))),
+        ]),
+    );
+  }
+}
+
+class _DetailRow extends StatelessWidget {
+  final IconData icon;
+  final String title, value;
+  final VoidCallback? onTap;
+  const _DetailRow({required this.icon, required this.title, required this.value, this.onTap});
+  @override Widget build(BuildContext context) => Container(
+    margin: const EdgeInsets.only(bottom: 8),
+    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14), border: Border.all(color: const Color(0xFFEEE6DE))),
+    child: ListTile(
+      leading: Icon(icon, color: green),
+      title: Text(title, style: const TextStyle(fontSize: 12, color: Color(0xFF71675F), fontWeight: FontWeight.w700)),
+      subtitle: Text(value, style: const TextStyle(fontSize: 14, color: ink, fontWeight: FontWeight.w700)),
+      trailing: onTap == null ? null : const Icon(Icons.open_in_new_rounded, size: 16, color: green),
+      onTap: onTap,
+    ),
+  );
+}
+
 class BusinessTile extends StatelessWidget {
   final Map<String, dynamic> item;
   const BusinessTile({super.key, required this.item});
@@ -510,21 +651,29 @@ class BusinessTile extends StatelessWidget {
     final desc = item['description'] ?? 'Discover this business and its services.';
     final city = item['city']?.toString(), state = item['state']?.toString();
     final initials = title.toString().trim().isEmpty ? 'B' : title.toString().trim()[0].toUpperCase();
-    return Container(margin: const EdgeInsets.only(bottom: 12), padding: const EdgeInsets.all(15), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFFEEE6DE)), boxShadow: const [BoxShadow(color: Color(0x08000000), blurRadius: 14, offset: Offset(0, 5))]), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Container(width: 54, height: 54, alignment: Alignment.center, decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF25211D), Color(0xFFED7900)]), borderRadius: BorderRadius.circular(14)), child: Text(initials, style: const TextStyle(color: Colors.white, fontSize: 21, fontWeight: FontWeight.w900))),
-      const SizedBox(width: 11), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [
-          Expanded(child: Text('$title', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: ink))),
-          const SizedBox(width: 6), Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3), decoration: BoxDecoration(color: const Color(0xFFF6F1EC), borderRadius: BorderRadius.circular(5)), child: const Text('BUSINESS', style: TextStyle(fontSize: 10, letterSpacing: .5, color: Color(0xFF665D55), fontWeight: FontWeight.w900))),
-        ]),
-        const SizedBox(height: 4), Text('$desc', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, height: 1.35, color: Color(0xFF71675F))),
-        if ((city ?? '').isNotEmpty || (state ?? '').isNotEmpty) Padding(padding: const EdgeInsets.only(top: 7), child: Row(children: [
-          const Icon(Icons.location_on_outlined, size: 12, color: green), const SizedBox(width: 3),
-          Expanded(child: Text([city, state].where((v) => v != null && v.isNotEmpty).join(', '), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: green, fontWeight: FontWeight.w800))),
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => BusinessDetailsScreen(item: item))),
+        child: Container(margin: const EdgeInsets.only(bottom: 12), padding: const EdgeInsets.all(15), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: const Color(0xFFEEE6DE)), boxShadow: const [BoxShadow(color: Color(0x08000000), blurRadius: 14, offset: Offset(0, 5))]), child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Container(width: 54, height: 54, alignment: Alignment.center, decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF25211D), Color(0xFFED7900)]), borderRadius: BorderRadius.circular(14)), child: Text(initials, style: const TextStyle(color: Colors.white, fontSize: 21, fontWeight: FontWeight.w900))),
+          const SizedBox(width: 11), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              Expanded(child: Text('$title', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w900, color: ink))),
+              const SizedBox(width: 6), Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3), decoration: BoxDecoration(color: const Color(0xFFF6F1EC), borderRadius: BorderRadius.circular(5)), child: const Text('BUSINESS', style: TextStyle(fontSize: 10, letterSpacing: .5, color: Color(0xFF665D55), fontWeight: FontWeight.w900))),
+            ]),
+            const SizedBox(height: 4), Text('$desc', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, height: 1.35, color: Color(0xFF71675F))),
+            if ((city ?? '').isNotEmpty || (state ?? '').isNotEmpty) Padding(padding: const EdgeInsets.only(top: 7), child: Row(children: [
+              const Icon(Icons.location_on_outlined, size: 12, color: green), const SizedBox(width: 3),
+              Expanded(child: Text([city, state].where((v) => v != null && v.isNotEmpty).join(', '), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, color: green, fontWeight: FontWeight.w800))),
+            ])),
+          ])),
+          const SizedBox(width: 3), const Icon(Icons.north_east_rounded, size: 15, color: Color(0xFF9C9187)),
         ])),
-      ])),
-      const SizedBox(width: 3), const Icon(Icons.north_east_rounded, size: 15, color: Color(0xFF9C9187)),
-    ]));
+      ),
+    );
   }
 }
 
