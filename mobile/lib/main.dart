@@ -190,7 +190,7 @@ class _MainShellState extends State<MainShell> {
       backgroundColor: Colors.white,
       surfaceTintColor: Colors.white,
       indicatorColor: const Color(0xFFFFEEDD),
-      labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+      labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
       destinations: const [
         NavigationDestination(icon: Icon(Icons.explore_outlined), selectedIcon: Icon(Icons.explore_rounded), label: 'Discover'),
         NavigationDestination(icon: Icon(Icons.assignment_outlined), selectedIcon: Icon(Icons.assignment_rounded), label: 'Requests'),
@@ -271,18 +271,47 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
         const Text('BROWSE', style: TextStyle(fontSize: 11, color: green, fontWeight: FontWeight.w900, letterSpacing: .9)),
       ]),
       const SizedBox(height: 10),
-      SizedBox(height: 86, child: ListView.separated(scrollDirection: Axis.horizontal, itemCount: categories.length, separatorBuilder: (_, __) => const SizedBox(width: 9), itemBuilder: (context, i) {
-        final item = categories[i];
-        final selected = activeCategory == item.label;
-        return InkWell(onTap: () => chooseCategory(item), borderRadius: BorderRadius.circular(15), child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180), width: 82, padding: const EdgeInsets.symmetric(vertical: 9),
-          decoration: BoxDecoration(color: selected ? const Color(0xFFFFF0E3) : Colors.white, borderRadius: BorderRadius.circular(15), border: Border.all(color: selected ? green : const Color(0xFFEEE6DE))),
-          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Icon(item.icon, color: green, size: 22), const SizedBox(height: 6),
-            Text(item.label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 10, color: ink, fontWeight: FontWeight.w800)),
-          ]),
-        ));
-      })),
+      GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: categories.length,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 4, mainAxisSpacing: 10, crossAxisSpacing: 10, mainAxisExtent: 88,
+        ),
+        itemBuilder: (context, i) {
+          final item = categories[i];
+          final selected = activeCategory == item.label;
+          return Semantics(
+            button: true, label: item.label,
+            child: InkWell(
+              onTap: () => chooseCategory(item),
+              borderRadius: BorderRadius.circular(18),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                decoration: BoxDecoration(
+                  color: selected ? const Color(0xFFFFE9D4) : Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: selected ? green : const Color(0xFFEEE6DE), width: selected ? 1.5 : 1),
+                  boxShadow: const [BoxShadow(color: Color(0x08000000), blurRadius: 10, offset: Offset(0, 3))],
+                ),
+                child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                  Container(
+                    width: 43, height: 43,
+                    decoration: BoxDecoration(
+                      color: selected ? green : const Color(0xFFFFF2E7),
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Icon(item.icon, color: selected ? Colors.white : green, size: 23),
+                  ),
+                  const SizedBox(height: 7),
+                  Text(item.label, maxLines: 1, overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 10, color: ink, fontWeight: FontWeight.w800)),
+                ]),
+              ),
+            ),
+          );
+        },
+      ),
       const SizedBox(height: 18),
       Row(children: [
         const Expanded(child: Text('Businesses near your search', style: TextStyle(fontSize: 17, color: ink, fontWeight: FontWeight.w900))),
@@ -310,9 +339,9 @@ class _DiscoveryCommandCenter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    height: 252,
+    height: 218,
     clipBehavior: Clip.antiAlias,
-    padding: const EdgeInsets.fromLTRB(22, 21, 20, 19),
+    padding: const EdgeInsets.fromLTRB(20, 17, 18, 16),
     decoration: BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(25),
