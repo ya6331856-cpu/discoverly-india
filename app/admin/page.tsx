@@ -49,7 +49,8 @@ export default function AdminPage(){
       sb.from("reviews").select("id,company_id,rating,title,body,created_at").eq("moderation_status","pending").order("created_at",{ascending:true}),
       sb.from("content_reports").select("id,target_type,target_id,reason,details,status,created_at").in("status",["open","in_review"]).order("created_at",{ascending:true}),
       sb.from("data_sources").select("id,source_key,name,license_name,status,ingestion_enabled,source_url,terms_url,attribution_text").eq("status","active").eq("ingestion_enabled",true).order("name"),
-      sb.from("business_import_staging").select("id,business_name,city,state,category_name,status,duplicate_of_company_id,source_record_url,created_at").in("status",["needs_review","duplicate"]).order("created_at",{ascending:false}).limit(100)
+      sb.from("business_import_staging").select("id,business_name,city,state,category_name,status,duplicate_of_company_id,source_record_url,created_at").in("status",["needs_review","duplicate"]).order("created_at",{ascending:false}).limit(100),
+      sb.from("data_import_batches").select("id,status,file_name,input_count,staged_count,duplicate_count,rejected_count,approved_count,created_at").order("created_at",{ascending:false}).limit(10)
     ]);
     const firstError=co.error||ve.error||re.error||cr.error||ds.error||st.error||ba.error;
     if(firstError)setError(firstError.message);
