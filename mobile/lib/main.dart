@@ -1369,6 +1369,45 @@ class PrivacyPolicyScreen extends StatelessWidget {
   );
 }
 
+Future<void> _editProfile(BuildContext context, String? currentName) async {
+  final user = supabase.auth.currentUser;
+  if (user == null) return;
+  final controller = TextEditingController(text: currentName ?? '');
+  final save = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: const Text('Edit your name'),
+      content: TextField(
+        controller: controller,
+        autofocus: true,
+        textCapitalization: TextCapitalization.words,
+        maxLength: 60,
+        decoration: const InputDecoration(labelText: 'Display name'),
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
+        FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Save')),
+      ],
+    ),
+  );
+  final name = controller.text.trim();
+  controller.dispose();
+  if (save != true || !context.mounted) return;
+  if (name.length < 2 || name.length > 60) {
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Name must be between 2 and 60 characters.')));
+    return;
+  }
+  try {
+    await supabase.auth.updateUser(UserAttributes(data: {'display_name': name}));
+    await supabase.from('profiles').upsert({'id': user.id, 'display_name': name}, onConflict: 'id');
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Your profile name has been updated.')));
+    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => const MainShell()));
+  } catch (_) {
+    if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not update your profile. Please try again.')));
+  }
+}
+
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
   @override Widget build(BuildContext context) {
@@ -1389,14 +1428,7 @@ class ProfileScreen extends StatelessWidget {
       const SizedBox(height: 20),
       const Text('YOUR ACCOUNT', style: TextStyle(fontSize: 12, color: green, letterSpacing: 1, fontWeight: FontWeight.w900)),
       const SizedBox(height: 9),
-      _ProfileTile(icon: Icons.person_outline_rounded, title: 'Personal information', subtitle: display?.isNotEmpty == true ? display! : 'Name and sign-in identity', onTap: () => showModalBottomSheet(context: context, showDragHandle: true, useSafeArea: true, shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(26))), builder: (_) => Padding(padding: const EdgeInsets.fromLTRB(20, 8, 20, 28), child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const Text('Personal information', style: TextStyle(fontSize: 21, color: ink, fontWeight: FontWeight.w900)),
-        const SizedBox(height: 17), const Text('DISPLAY NAME', style: TextStyle(fontSize: 11, color: green, fontWeight: FontWeight.w900, letterSpacing: .8)),
-        const SizedBox(height: 5), Text(display?.isNotEmpty == true ? display! : 'Not provided', style: const TextStyle(fontSize: 17, color: ink, fontWeight: FontWeight.w700)),
-        const SizedBox(height: 15), const Text('EMAIL ADDRESS', style: TextStyle(fontSize: 11, color: green, fontWeight: FontWeight.w900, letterSpacing: .8)),
-        const SizedBox(height: 5), Text(user?.email ?? 'Not available', style: const TextStyle(fontSize: 17, color: ink, fontWeight: FontWeight.w700)),
-        const SizedBox(height: 8), const Text('Profile editing will be enabled with the profile management module.', style: TextStyle(fontSize: 14, color: Color(0xFF71675F), height: 1.4)),
-      ])))),
+      _ProfileTile(icon: Icons.person_outline_rounded, title: 'Personal information', subtitle: display?.isNotEmpty == true ? display! : 'Name and sign-in identity', onTap: () => _editProfile(context, display)),
       const SizedBox(height: 8),
       _ProfileTile(icon: Icons.notifications_none_rounded, title: 'Notifications', subtitle: 'Account updates and activity', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsScreen()))),
       const SizedBox(height: 8),
