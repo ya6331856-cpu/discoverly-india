@@ -19,7 +19,7 @@ export default function TermsPage() {
       <li>Fake businesses, fraudulent offers, scams, deceptive claims or misleading contact details.</li>
       <li>Illegal goods or services, prohibited transactions or content that violates applicable law.</li>
       <li>Spam, duplicate listings, unsolicited bulk messages or attempts to manipulate search or reviews.</li>
-      <li>Threats, harassment, hate speech, discriminatory abuse or sharing another person's private information without permission.</li>
+      <li>Threats, harassment, hate speech, discriminatory abuse or sharing another person&apos;s private information without permission.</li>
       <li>Copyright, trademark or other intellectual-property infringement.</li>
     </ul>
     <h2>3. Reporting, blocking and moderation</h2>
