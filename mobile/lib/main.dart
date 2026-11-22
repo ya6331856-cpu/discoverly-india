@@ -1555,8 +1555,8 @@ class PrivacyPolicyScreen extends StatelessWidget {
       _section('Location and device access', 'The current app asks you to enter a city and state for business and requirement matching. It does not request precise GPS location, contacts, camera or microphone permissions in this release.'),
       _section('Security and retention', 'We use authenticated access controls and database row-level security. Information is retained while your account is active or as needed to operate, secure and resolve disputes on the platform. Some audit records may be retained in a de-identified form.'),
       _section('Account deletion', 'You can start deletion from Profile → Delete account. The app asks you to confirm the action. Your login and personal account data are deleted; a business profile may be retained only when another active member continues to manage it.'),
-      _section('Your choices and contact', 'You may avoid submitting optional profile or business information. For privacy questions or deletion problems, use the support contact published on the DISCOVERLY Google Play listing.'),
-      const Text('This in-app notice is a summary. The public privacy policy linked from the Play listing will contain the full developer contact and policy details.', style: TextStyle(fontSize: 12, height: 1.45, color: Color(0xFF8A7D73))),
+      _section('Your choices and contact', 'You may avoid submitting optional profile or business information. For privacy questions or deletion problems, email ya6331856@gmail.com.'),
+      const Text('Support contact: ya6331856@gmail.com. This in-app notice is a summary; read the full public privacy policy for complete details.', style: TextStyle(fontSize: 12, height: 1.45, color: Color(0xFF8A7D73))),
     ]),
   );
 }
