@@ -1,0 +1,13 @@
+create index if not exists audit_logs_actor_user_id_idx on public.audit_logs(actor_user_id);
+create index if not exists offering_categories_category_id_idx on public.offering_categories(category_id);
+create index if not exists offering_media_offering_id_idx on public.offering_media(offering_id);
+create index if not exists quotations_company_id_idx on public.quotations(company_id);
+create index if not exists requirement_matches_company_id_idx on public.requirement_matches(company_id);
+create index if not exists reviews_reviewer_user_id_idx on public.reviews(reviewer_user_id);
+create index if not exists saved_items_company_id_idx on public.saved_items(company_id);
+create index if not exists saved_items_offering_id_idx on public.saved_items(offering_id);
+create index if not exists search_events_clicked_company_id_idx on public.search_events(clicked_company_id);
+create index if not exists search_events_user_id_idx on public.search_events(user_id);
+create index if not exists service_areas_company_id_idx on public.service_areas(company_id);
+create index if not exists verification_cases_company_id_idx on public.verification_cases(company_id);
+create index if not exists verification_cases_reviewer_id_idx on public.verification_cases(reviewer_id);
