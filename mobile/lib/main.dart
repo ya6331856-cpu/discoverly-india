@@ -334,7 +334,13 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
       const SizedBox(height: 11),
       if (loading) const Padding(padding: EdgeInsets.all(25), child: Center(child: CircularProgressIndicator(color: green))),
       if (error != null) _CompactEmpty(icon: Icons.wifi_off_rounded, title: 'Could not load listings', message: error!, action: 'Try again', onTap: find),
-      if (!loading && error == null && results.isEmpty) _CompactEmpty(icon: Icons.storefront_outlined, title: 'No listings yet', message: 'There are no published businesses matching this search. Try another keyword or city.', action: 'Reset search', onTap: () { search.clear(); city.clear(); setState(() => activeCategory = 'All'); find(); }),
+      if (!loading && error == null && results.isEmpty && search.text.trim().isEmpty && city.text.trim().isEmpty && activeCategorySlug == null)
+        _DiscoveryEmptyState(
+          onListBusiness: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BusinessOnboardingScreen())),
+          onPostRequest: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const RequirementsScreen())),
+        ),
+      if (!loading && error == null && results.isEmpty && (search.text.trim().isNotEmpty || city.text.trim().isNotEmpty || activeCategorySlug != null))
+        _CompactEmpty(icon: Icons.search_off_rounded, title: 'No matching businesses', message: 'Try another keyword, city or industry. You can also post a requirement to reach relevant businesses.', action: 'Clear filters', onTap: () { search.clear(); city.clear(); setState(() { activeCategory = 'All industries'; activeCategorySlug = null; }); find(); }),
       if (!loading && error == null) ...results.map((item) => BusinessTile(item: Map<String, dynamic>.from(item as Map))),
       const SizedBox(height: 12),
       Container(padding: const EdgeInsets.all(13), decoration: BoxDecoration(color: const Color(0xFFFFF3E8), borderRadius: BorderRadius.circular(16)), child: const Row(children: [
@@ -437,6 +443,53 @@ IconData _categoryIcon(String slug) {
   if (slug.contains('mining')) return Icons.factory_rounded;
   return Icons.business_center_rounded;
 }
+class _DiscoveryEmptyState extends StatelessWidget {
+  final VoidCallback onListBusiness;
+  final VoidCallback onPostRequest;
+  const _DiscoveryEmptyState({required this.onListBusiness, required this.onPostRequest});
+  @override Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(18),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(22),
+      border: Border.all(color: const Color(0xFFEEE6DE)),
+      boxShadow: const [BoxShadow(color: Color(0x08000000), blurRadius: 16, offset: Offset(0, 5))],
+    ),
+    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Container(
+        width: 58, height: 58,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(colors: [Color(0xFFFFEAD6), Color(0xFFFFF6EC)]),
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: const Icon(Icons.store_mall_directory_rounded, color: green, size: 30),
+      ),
+      const SizedBox(height: 14),
+      const Text('The network starts here.', style: TextStyle(fontSize: 21, height: 1.15, color: ink, fontWeight: FontWeight.w900)),
+      const SizedBox(height: 6),
+      const Text('DISCOVERLY is opening its business network. Add your business or post what you need to start making connections.', style: TextStyle(fontSize: 14, height: 1.45, color: Color(0xFF71675F))),
+      const SizedBox(height: 16),
+      SizedBox(width: double.infinity, child: FilledButton.icon(
+        onPressed: onListBusiness,
+        icon: const Icon(Icons.add_business_rounded),
+        label: const Text('List your business'),
+      )),
+      const SizedBox(height: 9),
+      SizedBox(width: double.infinity, child: OutlinedButton.icon(
+        onPressed: onPostRequest,
+        icon: const Icon(Icons.post_add_rounded),
+        label: const Text('Post a requirement'),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: green,
+          minimumSize: const Size(0, 50),
+          side: const BorderSide(color: Color(0xFFF0C79F)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        ),
+      )),
+    ]),
+  );
+}
+
 class _CompactEmpty extends StatelessWidget {
   final IconData icon; final String title, message, action; final VoidCallback onTap;
   const _CompactEmpty({required this.icon, required this.title, required this.message, required this.action, required this.onTap});
