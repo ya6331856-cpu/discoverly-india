@@ -56,4 +56,17 @@ if 'android:allowBackup=' not in manifest:
 if 'android:usesCleartextTraffic=' not in manifest:
     manifest = manifest.replace('<application', '<application android:usesCleartextTraffic="false"', 1)
 manifest_file.write_text(manifest)
-print("Android package ID, API 36, app label, backup setting and upload signing configuration prepared.")
+
+kotlin_root = Path("android/app/src/main/kotlin")
+activity_files = list(kotlin_root.rglob("MainActivity.kt"))
+if not activity_files:
+    raise SystemExit("Generated MainActivity.kt was not found")
+target_activity = kotlin_root / "com/discoverly/app/MainActivity.kt"
+target_activity.parent.mkdir(parents=True, exist_ok=True)
+activity_content = activity_files[0].read_text()
+activity_content = re.sub(r"^package [^\\n]+", "package com.discoverly.app", activity_content, count=1, flags=re.MULTILINE)
+target_activity.write_text(activity_content)
+if activity_files[0] != target_activity:
+    activity_files[0].unlink()
+
+print("Android package ID, API 36, app label, backup setting, Kotlin namespace and upload signing configuration prepared.")
