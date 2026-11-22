@@ -51,5 +51,9 @@ build_file.write_text(build)
 manifest = manifest_file.read_text()
 manifest = re.sub(r'android:label="[^"]+"', 'android:label="DISCOVERLY"', manifest, count=1)
 manifest = re.sub(r'android:allowBackup="[^"]+"', 'android:allowBackup="false"', manifest, count=1)
+if 'android:allowBackup=' not in manifest:
+    manifest = manifest.replace('<application', '<application android:allowBackup="false"', 1)
+if 'android:usesCleartextTraffic=' not in manifest:
+    manifest = manifest.replace('<application', '<application android:usesCleartextTraffic="false"', 1)
 manifest_file.write_text(manifest)
 print("Android package ID, API 36, app label, backup setting and upload signing configuration prepared.")
