@@ -6,3 +6,9 @@ out
 .env.*.local
 .DS_Store
 *.log
+# Android release signing material — never commit private keys
+*.jks
+*.keystore
+key.properties
+android/key.properties
+android/app/upload-keystore.jks
