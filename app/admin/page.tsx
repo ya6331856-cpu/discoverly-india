@@ -10,6 +10,7 @@ type Review={id:string;company_id:string;rating:number;title:string|null;body:st
 type Report={id:string;target_type:string;target_id:string;reason:string;details:string|null;status:string;created_at:string};
 type DataSource={id:string;source_key:string;name:string;license_name:string;status:string;ingestion_enabled:boolean;source_url:string;terms_url:string|null;attribution_text:string|null};
 type ImportItem={id:string;business_name:string;city:string|null;state:string|null;category_name:string|null;status:string;duplicate_of_company_id:string|null;source_record_url:string|null;created_at:string};
+type ImportBatch={id:string;status:string;file_name:string|null;input_count:number;staged_count:number;duplicate_count:number;rejected_count:number;approved_count:number;created_at:string};
 function parseCsv(text:string):Record<string,string>[]{
   const rows:string[][]=[];let row:string[]=[];let cell="";let quoted=false;
   for(let i=0;i<text.length;i++){const ch=text[i];if(ch==='"'){if(quoted&&text[i+1]==='"'){cell+='"';i++;}else quoted=!quoted;}else if(ch===','&&!quoted){row.push(cell);cell="";}else if((ch==='\\n'||ch==='\\r')&&!quoted){if(ch==='\\r'&&text[i+1]==='\\n')i++;row.push(cell);if(row.some(v=>v.trim()))rows.push(row);row=[];cell="";}else cell+=ch;}
@@ -27,7 +28,7 @@ export default function AdminPage(){
   const [reviews,setReviews]=useState<Review[]>([]);const [reports,setReports]=useState<Report[]>([]);
   const [companyNames,setCompanyNames]=useState<Record<string,string>>({});const [notes,setNotes]=useState<Record<string,string>>({});
   const [dataSources,setDataSources]=useState<DataSource[]>([]);
-  const [importItems,setImportItems]=useState<ImportItem[]>([]);
+  const [importItems,setImportItems]=useState<ImportItem[]>([]);\n  const [importBatches,setImportBatches]=useState<ImportBatch[]>([]);
   const [selectedSource,setSelectedSource]=useState("");
   const [importBusy,setImportBusy]=useState(false);
   const [importSummary,setImportSummary]=useState("");
@@ -41,7 +42,7 @@ export default function AdminPage(){
     if(roleError){setError(roleError.message);setLoading(false);return;}
     if(!(roles||[]).some((r:{role:string})=>r.role==="admin"||r.role==="moderator")){setAllowed(false);setLoading(false);return;}
     setAllowed(true);
-    const [co,ve,re,cr,ds,st]=await Promise.all([
+    const [co,ve,re,cr,ds,st,ba]=await Promise.all([
       sb.from("companies").select("id,display_name,legal_name,slug,status,created_at").eq("status","pending_review").order("created_at",{ascending:true}),
       sb.from("verification_cases").select("id,company_id,verification_type,status,reference_value,document_path,submitted_at").in("status",["submitted","in_review"]).order("submitted_at",{ascending:true}),
       sb.from("reviews").select("id,company_id,rating,title,body,created_at").eq("moderation_status","pending").order("created_at",{ascending:true}),
@@ -49,14 +50,14 @@ export default function AdminPage(){
       sb.from("data_sources").select("id,source_key,name,license_name,status,ingestion_enabled,source_url,terms_url,attribution_text").eq("status","active").eq("ingestion_enabled",true).order("name"),
       sb.from("business_import_staging").select("id,business_name,city,state,category_name,status,duplicate_of_company_id,source_record_url,created_at").in("status",["needs_review","duplicate"]).order("created_at",{ascending:false}).limit(100)
     ]);
-    const firstError=co.error||ve.error||re.error||cr.error||ds.error||st.error;
+    const firstError=co.error||ve.error||re.error||cr.error||ds.error||st.error||ba.error;
     if(firstError)setError(firstError.message);
     const companyRows=(co.data||[]) as Company[];const verRows=(ve.data||[]) as Verification[];
     const reviewRows=(re.data||[]) as Review[];const reportRows=(cr.data||[]) as Report[];
     const ids=Array.from(new Set([...companyRows.map(x=>x.id),...verRows.map(x=>x.company_id),...reviewRows.map(x=>x.company_id)]));
     const names:Record<string,string>={};
     if(ids.length){const {data}=await sb.from("companies").select("id,display_name").in("id",ids);for(const row of data||[])names[row.id]=row.display_name;}
-    setCompanies(companyRows);setVerifications(verRows);setReviews(reviewRows);setReports(reportRows);setCompanyNames(names);setDataSources((ds.data||[]) as DataSource[]);setImportItems((st.data||[]) as ImportItem[]);if(!selectedSource&&ds.data?.length)setSelectedSource(ds.data[0].id);
+    setCompanies(companyRows);setVerifications(verRows);setReviews(reviewRows);setReports(reportRows);setCompanyNames(names);setDataSources((ds.data||[]) as DataSource[]);setImportItems((st.data||[]) as ImportItem[]);setImportBatches((ba.data||[]) as ImportBatch[]);if(!selectedSource&&ds.data?.length)setSelectedSource(ds.data[0].id);
     setLoading(false);
   }
   useEffect(()=>{void Promise.resolve().then(()=>load());},[]);
@@ -145,6 +146,8 @@ export default function AdminPage(){
       <div className="formField"><label>Upload CSV file</label><input type="file" accept=".csv,text/csv" disabled={importBusy||!selectedSource} onChange={e=>{const file=e.target.files?.[0];if(file)void importCsvFile(file);e.currentTarget.value="";}}/></div>
       <p className="accountMuted">Headers: name/business_name, city, state, category, website, phone, email, external_id, source_url. Maximum 1,000 rows per upload.</p>
       {importBusy&&<p className="formSuccess">Staging CSV records…</p>}{importSummary&&<p className="formSuccess">{importSummary}</p>}
+      <div className="formHeader"><div><small className="eyebrow">IMPORT HISTORY</small><h2>Recent data batches</h2></div><span>{importBatches.length} BATCHES</span></div>
+      {importBatches.length===0?<p className="accountMuted">No import batches yet.</p>:importBatches.map(batch=><article className="adminItem" key={batch.id}><div className="adminItemMain"><h3>{batch.file_name||"Business data import"}</h3><p>{batch.status} · {new Date(batch.created_at).toLocaleString()}</p><small>{batch.input_count} input · {batch.staged_count} staged · {batch.duplicate_count} duplicates · {batch.rejected_count} rejected · {batch.approved_count} imported</small></div></article>)}
       <div className="formHeader"><div><small className="eyebrow">QUEUE 00</small><h2>Imported records awaiting review</h2></div><span>{importItems.length} ITEMS</span></div>
       {importItems.length===0?<p className="accountMuted">No imported records awaiting review.</p>:importItems.map(item=><article className="adminItem" key={item.id}><div className="adminItemMain"><h3>{item.business_name}</h3><p>{[item.city,item.state,item.category_name].filter(Boolean).join(" · ")||"Location/category not supplied"}</p><small>{item.status==="duplicate"?"Possible duplicate":"Needs review"}{item.source_record_url?<> · <a href={item.source_record_url} target="_blank" rel="noreferrer">Source record ↗</a></>:null}</small><textarea rows={2} placeholder="Reviewer note" value={notes[item.id]||""} onChange={e=>setNotes(old=>({...old,[item.id]:e.target.value}))}/></div><div className="adminActions"><button disabled={busyId===item.id||item.status==="duplicate"} onClick={()=>reviewImportItem(item,"approve")}>Approve import</button><button className="dangerAction" disabled={busyId===item.id} onClick={()=>reviewImportItem(item,item.status==="duplicate"?"duplicate":"reject")}>{item.status==="duplicate"?"Confirm duplicate":"Reject"}</button></div></article>)}
     </section>
