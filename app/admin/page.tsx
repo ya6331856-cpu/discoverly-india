@@ -28,7 +28,8 @@ export default function AdminPage(){
   const [reviews,setReviews]=useState<Review[]>([]);const [reports,setReports]=useState<Report[]>([]);
   const [companyNames,setCompanyNames]=useState<Record<string,string>>({});const [notes,setNotes]=useState<Record<string,string>>({});
   const [dataSources,setDataSources]=useState<DataSource[]>([]);
-  const [importItems,setImportItems]=useState<ImportItem[]>([]);\n  const [importBatches,setImportBatches]=useState<ImportBatch[]>([]);
+  const [importItems,setImportItems]=useState<ImportItem[]>([]);
+  const [importBatches,setImportBatches]=useState<ImportBatch[]>([]);
   const [selectedSource,setSelectedSource]=useState("");
   const [importBusy,setImportBusy]=useState(false);
   const [importSummary,setImportSummary]=useState("");
