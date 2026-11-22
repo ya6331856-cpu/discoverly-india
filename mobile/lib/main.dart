@@ -210,23 +210,24 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   List<dynamic> results = [];
   bool loading = false;
   String? error;
-  String activeCategory = 'All';
-  final categories = const [
-    _DiscoverCategory('All', Icons.apps_rounded, ''),
-    _DiscoverCategory('Services', Icons.home_repair_service_rounded, 'Services'),
-    _DiscoverCategory('Food', Icons.restaurant_rounded, 'Food'),
-    _DiscoverCategory('Shopping', Icons.shopping_bag_rounded, 'Shopping'),
-    _DiscoverCategory('Tech', Icons.devices_rounded, 'Technology'),
-    _DiscoverCategory('Health', Icons.health_and_safety_rounded, 'Healthcare'),
-    _DiscoverCategory('Education', Icons.school_rounded, 'Education'),
-    _DiscoverCategory('Travel', Icons.flight_takeoff_rounded, 'Travel'),
-  ];
+  String activeCategory = 'All industries';
+  String? activeCategorySlug;
+  List<Map<String, dynamic>> categories = [];
+  Future<void> loadCategories() async {
+    try {
+      final data = await supabase.from('categories').select('id,name,slug')
+        .eq('category_type', 'industry').eq('is_active', true).order('sort_order');
+      if (mounted) setState(() => categories = List<Map<String, dynamic>>.from(data));
+    } catch (_) {
+      if (mounted) setState(() => error = 'Industry categories could not be loaded. Pull down to retry.');
+    }
+  }
   Future<void> find() async {
     setState(() { loading = true; error = null; });
     try {
       final data = await supabase.rpc('search_businesses', params: {
         'search_query': search.text.trim().isEmpty ? null : search.text.trim(),
-        'category_slug': null, 'state_filter': null,
+        'category_slug': activeCategorySlug, 'state_filter': null,
         'city_filter': city.text.trim().isEmpty ? null : city.text.trim(),
         'result_limit': 40, 'result_offset': 0,
       });
@@ -236,11 +237,15 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     }
     if (mounted) setState(() => loading = false);
   }
-  void chooseCategory(_DiscoverCategory item) {
-    setState(() { activeCategory = item.label; search.text = item.query; });
+  void chooseCategory(Map<String, dynamic>? item) {
+    setState(() {
+      activeCategory = item?['name']?.toString() ?? 'All industries';
+      activeCategorySlug = item?['slug']?.toString();
+      search.clear();
+    });
     find();
   }
-  @override void initState() { super.initState(); find(); }
+  @override void initState() { super.initState(); loadCategories(); find(); }
   @override void dispose() { search.dispose(); city.dispose(); super.dispose(); }
 
   @override Widget build(BuildContext context) => RefreshIndicator(
@@ -274,15 +279,19 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
       GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        itemCount: categories.length,
+        itemCount: categories.length + 1,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 4, mainAxisSpacing: 10, crossAxisSpacing: 10, mainAxisExtent: 88,
         ),
         itemBuilder: (context, i) {
-          final item = categories[i];
-          final selected = activeCategory == item.label;
+          final isAll = i == 0;
+          final item = isAll ? null : categories[i - 1];
+          final label = isAll ? 'All' : item!['name'].toString();
+          final slug = isAll ? null : item!['slug'].toString();
+          final selected = activeCategorySlug == slug;
+          final icon = isAll ? Icons.apps_rounded : _categoryIcon(slug!);
           return Semantics(
-            button: true, label: item.label,
+            button: true, label: label,
             child: InkWell(
               onTap: () => chooseCategory(item),
               borderRadius: BorderRadius.circular(18),
@@ -301,11 +310,14 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                       color: selected ? green : const Color(0xFFFFF2E7),
                       borderRadius: BorderRadius.circular(15),
                     ),
-                    child: Icon(item.icon, color: selected ? Colors.white : green, size: 23),
+                    child: Icon(icon, color: selected ? Colors.white : green, size: 23),
                   ),
                   const SizedBox(height: 7),
-                  Text(item.label, maxLines: 1, overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 10, color: ink, fontWeight: FontWeight.w800)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 3),
+                    child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 10, color: ink, fontWeight: FontWeight.w800)),
+                  ),
                 ]),
               ),
             ),
@@ -403,9 +415,27 @@ class _DiscoveryCommandCenter extends StatelessWidget {
   );
 }
 
-class _DiscoverCategory {
-  final String label; final IconData icon; final String query;
-  const _DiscoverCategory(this.label, this.icon, this.query);
+IconData _categoryIcon(String slug) {
+  if (slug.contains('agriculture')) return Icons.agriculture_rounded;
+  if (slug.contains('automotive')) return Icons.directions_car_filled_rounded;
+  if (slug.contains('beauty')) return Icons.spa_rounded;
+  if (slug.contains('construction')) return Icons.apartment_rounded;
+  if (slug.contains('education')) return Icons.school_rounded;
+  if (slug.contains('energy')) return Icons.bolt_rounded;
+  if (slug.contains('financial')) return Icons.account_balance_rounded;
+  if (slug.contains('food')) return Icons.restaurant_rounded;
+  if (slug.contains('health')) return Icons.health_and_safety_rounded;
+  if (slug.contains('software')) return Icons.devices_rounded;
+  if (slug.contains('manufacturing')) return Icons.precision_manufacturing_rounded;
+  if (slug.contains('media')) return Icons.campaign_rounded;
+  if (slug.contains('retail')) return Icons.shopping_bag_rounded;
+  if (slug.contains('wholesale')) return Icons.inventory_2_rounded;
+  if (slug.contains('logistics')) return Icons.local_shipping_rounded;
+  if (slug.contains('home-local')) return Icons.home_repair_service_rounded;
+  if (slug.contains('travel')) return Icons.flight_takeoff_rounded;
+  if (slug.contains('government')) return Icons.volunteer_activism_rounded;
+  if (slug.contains('mining')) return Icons.factory_rounded;
+  return Icons.business_center_rounded;
 }
 class _CompactEmpty extends StatelessWidget {
   final IconData icon; final String title, message, action; final VoidCallback onTap;
