@@ -70,6 +70,12 @@ jobs:
         run: |
           python3 -m pip install --quiet pillow
           python3 tooling/generate_icon.py
+      - name: Bundle Inter font (offline at runtime)
+        run: |
+          mkdir -p assets/fonts
+          curl --fail --location --silent --show-error 'https://raw.githubusercontent.com/google/fonts/047c92f6e2212473dc436020afed689527076d44/ofl/inter/Inter%5Bopsz%2Cwght%5D.ttf' -o assets/fonts/Inter.ttf
+          curl --fail --location --silent --show-error 'https://raw.githubusercontent.com/google/fonts/main/ofl/inter/OFL.txt' -o assets/fonts/Inter-OFL.txt
+          test -s assets/fonts/Inter.ttf
       - name: Install packages
         run: flutter pub get
       - name: Apply Android launcher icon
