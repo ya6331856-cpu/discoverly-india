@@ -115,7 +115,7 @@ if not activity_files:
 target_activity = kotlin_root / "com/discoverly/app/MainActivity.kt"
 target_activity.parent.mkdir(parents=True, exist_ok=True)
 activity_content = activity_files[0].read_text()
-activity_content = re.sub(r"^package [^\\n]+", "package com.discoverly.app", activity_content, count=1, flags=re.MULTILINE)
+activity_content = re.sub(r"^package [^\n]+", "package com.discoverly.app", activity_content, count=1, flags=re.MULTILINE)
 target_activity.write_text(activity_content)
 if activity_files[0] != target_activity:
     activity_files[0].unlink()
