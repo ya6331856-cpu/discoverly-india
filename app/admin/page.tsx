@@ -49,7 +49,7 @@ export default function AdminPage(){
       sb.from("data_sources").select("id,source_key,name,license_name,status,ingestion_enabled,source_url,terms_url,attribution_text").eq("status","active").eq("ingestion_enabled",true).order("name"),
       sb.from("business_import_staging").select("id,business_name,city,state,category_name,status,duplicate_of_company_id,source_record_url,created_at").in("status",["needs_review","duplicate"]).order("created_at",{ascending:false}).limit(100)
     ]);
-    const firstError=co.error||ve.error||re.error||cr.error;
+    const firstError=co.error||ve.error||re.error||cr.error||ds.error||st.error;
     if(firstError)setError(firstError.message);
     const companyRows=(co.data||[]) as Company[];const verRows=(ve.data||[]) as Verification[];
     const reviewRows=(re.data||[]) as Review[];const reportRows=(cr.data||[]) as Report[];
@@ -94,7 +94,7 @@ export default function AdminPage(){
     const sb=createClient();if(!sb)return;setBusyId(item.id);setError("");setNotice("");
     const {data,error:reviewError}=await sb.rpc("admin_review_business_import",{p_staging_id:item.id,p_decision:decision,p_review_note:notes[item.id]?.trim()||null});
     setBusyId("");if(reviewError){setError(reviewError.message);return;}
-    setNotice(decision==="approve"?"Imported business added as pending review. It is not public yet.":`Import record marked ${decision}.`);
+    setNotice(decision==="approve"?"Imported business saved as a private draft. Owner confirmation is required before publication.":`Import record marked ${decision}.`);
     await load();
   }
   async function changeCompany(id:string,status:"published"|"rejected"){
