@@ -11,12 +11,13 @@
 - [ ] Generate a private upload keystore and keep an encrypted backup offline.
 - [ ] Add the four DISCOVERLY_UPLOAD_* repository secrets listed in mobile/README.md.
 - [ ] Run Android Actions and verify a signed AAB is produced.
-- [ ] Install the APK on a physical Android device and test sign-up, email confirmation, sign-in, search, business draft, requirement posting, lead inbox, quote submit/review, notifications, admin access, sign-out and account deletion.
+- [ ] Install the APK on a physical Android device and test sign-up, email confirmation, Terms acceptance, sign-in, search, business details/contact links, report listing, block/unblock owner, business draft, requirement posting, lead inbox, quote submit/review, notifications, admin report moderation, profile editing, sign-out and account deletion.
 - [ ] Verify the Play Console App Integrity page accepts the upload certificate.
 
 ## Play Console setup
 - [ ] Create app → App name DISCOVERLY → default language English → App or game: App → Free (unless a paid model is intentionally selected).
 - [ ] Upload the signed AAB to Internal testing first.
+- [ ] Verify users must accept Terms of Use before posting, can report content, can block/unblock business owners, and moderators can review reports.
 - [ ] Complete Store listing: short description, full description, 512×512 icon, feature graphic 1024×500, phone screenshots, contact email and website.
 - [ ] Add the live Privacy Policy URL and external Account Deletion URL.
 - [ ] Complete App access instructions for reviewers (provide a test account if login is required; never share a personal/admin account).
