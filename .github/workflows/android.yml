@@ -25,31 +25,8 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: stable
+          flutter-version: '3.47.9'
           cache: true
-      - name: Ensure Flutter plugin build can resolve Maven dependencies
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          import shutil
-
-          flutter = Path(shutil.which("flutter")).resolve()
-          sdk_root = flutter.parent.parent
-          settings = sdk_root / "packages/flutter_tools/gradle/settings.gradle.kts"
-          current = settings.read_text()
-          if "pluginManagement" not in current:
-              header = (
-                  "pluginManagement {\n"
-                  "    repositories {\n"
-                  "        google()\n"
-                  "        mavenCentral()\n"
-                  "        gradlePluginPortal()\n"
-                  "    }\n"
-                  "}\n\n"
-              )
-              settings.write_text(header + current)
-          print(f"Verified plugin repositories in {settings}")
-          PY
       - name: Generate Android platform files
         run: flutter create --platforms=android --org=com.discoverly .
       - name: Prepare Android release configuration
