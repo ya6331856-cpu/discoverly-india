@@ -1125,6 +1125,101 @@ class _AdminConsoleScreenState extends State<AdminConsoleScreen> {
   );
 }
 
+
+Future<void> _confirmAccountDeletion(BuildContext context) async {
+  final confirmation = TextEditingController();
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: const Text('Delete your account?'),
+      content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Text('This permanently deletes your login and personal account data. If you are the only member of a business, that business profile and its dependent content will also be removed. This cannot be undone.'),
+        const SizedBox(height: 14),
+        const Text('Type DELETE to confirm.'),
+        const SizedBox(height: 8),
+        TextField(controller: confirmation, textCapitalization: TextCapitalization.characters, decoration: const InputDecoration(hintText: 'DELETE')),
+      ]),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
+        FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: const Color(0xFFB33A3A)),
+          onPressed: () => Navigator.pop(dialogContext, confirmation.text.trim() == 'DELETE'),
+          child: const Text('Delete permanently'),
+        ),
+      ],
+    ),
+  );
+  confirmation.dispose();
+  if (confirmed != true || !context.mounted) return;
+
+  showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => const AlertDialog(
+      content: Row(children: [
+        SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2)),
+        SizedBox(width: 14),
+        Expanded(child: Text('Deleting your account securely...')),
+      ]),
+    ),
+  );
+  try {
+    final result = await supabase.functions.invoke(
+      'delete-account',
+      body: {'confirmation': 'DELETE'},
+    );
+    if (result.status < 200 || result.status >= 300) {
+      throw Exception('Account deletion could not be completed.');
+    }
+    try { await supabase.auth.signOut(); } catch (_) {}
+    if (!context.mounted) return;
+    Navigator.of(context, rootNavigator: true).pop();
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const AuthScreen()),
+      (_) => false,
+    );
+  } catch (_) {
+    if (!context.mounted) return;
+    Navigator.of(context, rootNavigator: true).pop();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Account deletion failed. Please try again or contact support.')),
+    );
+  }
+}
+
+class PrivacyPolicyScreen extends StatelessWidget {
+  const PrivacyPolicyScreen({super.key});
+  Widget _section(String heading, String body) => Padding(
+    padding: const EdgeInsets.only(bottom: 18),
+    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text(heading, style: const TextStyle(fontSize: 16, color: ink, fontWeight: FontWeight.w900)),
+      const SizedBox(height: 6),
+      Text(body, style: const TextStyle(fontSize: 14, height: 1.5, color: Color(0xFF665D55))),
+    ]),
+  );
+  @override Widget build(BuildContext context) => Scaffold(
+    backgroundColor: canvas,
+    appBar: AppBar(title: const Text('Privacy & security')),
+    body: ListView(padding: const EdgeInsets.fromLTRB(20, 12, 20, 30), children: [
+      const Text('DISCOVERLY PRIVACY NOTICE', style: TextStyle(fontSize: 11, color: green, letterSpacing: 1, fontWeight: FontWeight.w900)),
+      const SizedBox(height: 8),
+      const Text('Your information, handled with care.', style: TextStyle(fontSize: 24, height: 1.15, color: ink, fontWeight: FontWeight.w900)),
+      const SizedBox(height: 8),
+      const Text('This notice explains the information used by DISCOVERLY to provide business discovery and opportunity services.', style: TextStyle(fontSize: 14, height: 1.5, color: Color(0xFF665D55))),
+      const SizedBox(height: 18),
+      _section('Information we collect', 'When you create an account, we process your email address and any display name you provide. If you use business features, we process business names, descriptions, category, city, state, website and contact details you submit. Requests, enquiries, quotations, reviews, saved items and in-app notifications are processed to operate the marketplace.'),
+      _section('How we use information', 'We use this information to authenticate accounts, show relevant business results, match customer requirements with businesses, deliver enquiries and quotations, maintain platform safety, moderate listings and provide support.'),
+      _section('Visibility and sharing', 'Business information and content you submit may be shown to other users when the relevant listing or content is approved for publication. We do not sell personal information. Data is processed by our hosting and database provider, Supabase, to operate the service.'),
+      _section('Location and device access', 'The current app asks you to enter a city and state for business and requirement matching. It does not request precise GPS location, contacts, camera or microphone permissions in this release.'),
+      _section('Security and retention', 'We use authenticated access controls and database row-level security. Information is retained while your account is active or as needed to operate, secure and resolve disputes on the platform. Some audit records may be retained in a de-identified form.'),
+      _section('Account deletion', 'You can start deletion from Profile → Delete account. The app asks you to confirm the action. Your login and personal account data are deleted; a business profile may be retained only when another active member continues to manage it.'),
+      _section('Your choices and contact', 'You may avoid submitting optional profile or business information. For privacy questions or deletion problems, use the support contact published on the DISCOVERLY Google Play listing.'),
+      const Text('This in-app notice is a summary. The public privacy policy linked from the Play listing will contain the full developer contact and policy details.', style: TextStyle(fontSize: 12, height: 1.45, color: Color(0xFF8A7D73))),
+    ]),
+  );
+}
+
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
   @override Widget build(BuildContext context) {
@@ -1160,7 +1255,9 @@ class ProfileScreen extends StatelessWidget {
       const SizedBox(height: 8),
       const _AdminAccessTile(),
       const SizedBox(height: 8),
-      _ProfileTile(icon: Icons.shield_outlined, title: 'Privacy & security', subtitle: 'Authentication and account protection', onTap: () => showDialog(context: context, builder: (_) => AlertDialog(title: const Text('Account security'), content: Text('Signed in as ' + (user?.email ?? 'your account') + '. Authentication is managed securely by Supabase.'), actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close'))]))),
+      _ProfileTile(icon: Icons.shield_outlined, title: 'Privacy & security', subtitle: 'How your information is used', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()))),
+      const SizedBox(height: 8),
+      _ProfileTile(icon: Icons.delete_outline_rounded, title: 'Delete account', subtitle: 'Permanently delete your account and personal data', onTap: () => _confirmAccountDeletion(context)),
       const SizedBox(height: 20),
       OutlinedButton.icon(onPressed: () async { await supabase.auth.signOut(); if (context.mounted) Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const AuthScreen()), (_) => false); }, icon: const Icon(Icons.logout_rounded, size: 18), label: const Text('Sign out'), style: OutlinedButton.styleFrom(foregroundColor: const Color(0xFFB33A3A), minimumSize: const Size(0, 49), side: const BorderSide(color: Color(0xFFEBD4D4)), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)))),
       const SizedBox(height: 17), const Center(child: Text('DISCOVERLY  •  CONNECT WITH POSSIBILITY', style: TextStyle(color: Color(0xFF8A7D73), fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: .8))),
