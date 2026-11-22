@@ -16,6 +16,7 @@ WHAT YOU CAN DO
 • Receive and review business quotations.
 • Manage incoming enquiries and business opportunities.
 • Stay informed with in-app notifications.
+• Report suspicious listings and block business owners you do not want to see.
 
 BUILT FOR BOTH SIDES
 Whether you are looking for a service or offering one, DISCOVERLY brings business discovery and customer requirements into one place.
