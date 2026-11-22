@@ -119,7 +119,7 @@ class _AuthScreenState extends State<AuthScreen> {
             const Spacer(),
             Text(signup ? 'Create meaningful connections.' : 'A better way to connect.', style: const TextStyle(color: Colors.white, fontSize: 21, height: 1.15, fontWeight: FontWeight.w900, letterSpacing: -.4)),
             const SizedBox(height: 6),
-            const Text('India’s discovery network for businesses, services and opportunities.', style: TextStyle(color: Color(0xFFD5E7DF), fontSize: 12, height: 1.4)),
+            const Text('India’s discovery network for businesses, services and opportunities.', style: TextStyle(color: Color(0xFFFFEFE0), fontSize: 12, height: 1.4)),
           ])),
         ])),
         const SizedBox(height: 19),
@@ -295,7 +295,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
       if (!loading && error == null && results.isEmpty) _CompactEmpty(icon: Icons.storefront_outlined, title: 'No listings yet', message: 'There are no published businesses matching this search. Try another keyword or city.', action: 'Reset search', onTap: () { search.clear(); city.clear(); setState(() => activeCategory = 'All'); find(); }),
       if (!loading && error == null) ...results.map((item) => BusinessTile(item: Map<String, dynamic>.from(item as Map))),
       const SizedBox(height: 12),
-      Container(padding: const EdgeInsets.all(13), decoration: BoxDecoration(color: const Color(0xFFEEF3EF), borderRadius: BorderRadius.circular(16)), child: const Row(children: [
+      Container(padding: const EdgeInsets.all(13), decoration: BoxDecoration(color: const Color(0xFFFFF3E8), borderRadius: BorderRadius.circular(16)), child: const Row(children: [
         Icon(Icons.tips_and_updates_outlined, color: green, size: 19), SizedBox(width: 9),
         Expanded(child: Text('Looking for something specific? Post a requirement and get discovered by relevant businesses.', style: TextStyle(fontSize: 13, height: 1.35, color: ink, fontWeight: FontWeight.w600))),
       ])),
@@ -330,7 +330,7 @@ class _DiscoveryCommandCenter extends StatelessWidget {
       Positioned(right: 19, top: 20, child: Container(
         width: 76, height: 76,
         decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white, border: Border.all(color: const Color(0xFF398FC4), width: 5)),
-        child: const Icon(Icons.travel_explore_rounded, color: Color(0xFF202020), size: 35),
+        child: const Icon(Icons.apartment_rounded, color: Color(0xFF202020), size: 35),
       )),
       Positioned(right: 4, bottom: -29, child: Transform.rotate(
         angle: -.18,
@@ -920,7 +920,7 @@ class ProfileScreen extends StatelessWidget {
         Container(width: 60, height: 60, alignment: Alignment.center, decoration: BoxDecoration(color: Colors.white.withValues(alpha: .13), shape: BoxShape.circle, border: Border.all(color: const Color(0x55FFFFFF))), child: Text(initial, style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900))),
         const SizedBox(width: 13), Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(display?.isNotEmpty == true ? display! : 'DISCOVERLY member', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w900)),
-          const SizedBox(height: 5), Text(user?.email ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFFD5E7DF), fontSize: 11)),
+          const SizedBox(height: 5), Text(user?.email ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Color(0xFFFFEFE0), fontSize: 11)),
           const SizedBox(height: 8), const Row(children: [Icon(Icons.verified_user_outlined, color: Color(0xFFFFB45E), size: 13), SizedBox(width: 5), Text('ACCOUNT ACTIVE', style: TextStyle(color: Color(0xFFFFB45E), fontSize: 11, letterSpacing: .8, fontWeight: FontWeight.w900))]),
         ])),
       ])),
