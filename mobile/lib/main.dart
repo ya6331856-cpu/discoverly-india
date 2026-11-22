@@ -689,6 +689,59 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
     }
   }
 
+  Future<void> reportBusiness() async {
+    final reason = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(child: Column(mainAxisSize: MainAxisSize.min, children: [
+        const ListTile(title: Text('Why are you reporting this business?', style: TextStyle(fontWeight: FontWeight.w900))),
+        for (final item in const [
+          ('fake_business', 'Fake business or scam'),
+          ('misleading_information', 'False or misleading information'),
+          ('spam', 'Spam or duplicate listing'),
+          ('abuse', 'Abusive or harmful content'),
+          ('copyright', 'Copyright concern'),
+          ('other', 'Something else'),
+        ]) ListTile(title: Text(item.$2), onTap: () => Navigator.pop(sheetContext, item.$1)),
+      ])),
+    );
+    if (reason == null || !mounted) return;
+    try {
+      final user = supabase.auth.currentUser;
+      if (user == null) throw Exception('Please sign in again.');
+      await supabase.from('content_reports').insert({
+        'reporter_user_id': user.id,
+        'target_type': 'company',
+        'target_id': widget.item['company_id'].toString(),
+        'reason': reason,
+      });
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Report submitted. Our moderation team will review it.')));
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not submit the report. Please try again.')));
+    }
+  }
+
+  Future<void> blockBusinessOwner() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Block this business owner?'),
+        content: const Text('Their business listings will no longer appear in your DISCOVERLY search results. You can unblock the account later from Profile → Blocked accounts.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Block owner')),
+        ],
+      ),
+    );
+    if (confirm != true || !mounted) return;
+    try {
+      await supabase.rpc('block_business_owner', params: {'p_company_id': widget.item['company_id'].toString()});
+      if (mounted) Navigator.pop(context, true);
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not block this account. Please try again.')));
+    }
+  }
+
   @override Widget build(BuildContext context) {
     final title = (company['display_name'] ?? widget.item['display_name'] ?? 'Business').toString();
     final description = (company['description'] ?? widget.item['description'] ?? '').toString();
@@ -739,6 +792,12 @@ class _BusinessDetailsScreenState extends State<BusinessDetailsScreen> {
           if ((profile['public_email'] ?? '').toString().isNotEmpty) _DetailRow(icon: Icons.mail_outline_rounded, title: 'Email', value: profile['public_email'].toString(), onTap: () => openExternal(profile['public_email'].toString(), 'email')),
           if ((company['website_url'] ?? widget.item['website_url'] ?? '').toString().isNotEmpty) _DetailRow(icon: Icons.language_rounded, title: 'Website', value: (company['website_url'] ?? widget.item['website_url']).toString(), onTap: () => openExternal((company['website_url'] ?? widget.item['website_url']).toString(), 'web')),
           if ((profile['whatsapp_url'] ?? '').toString().isNotEmpty) Padding(padding: const EdgeInsets.only(top: 8), child: OutlinedButton.icon(onPressed: () => openExternal(profile['whatsapp_url'].toString(), 'web'), icon: const Icon(Icons.chat_bubble_outline_rounded), label: const Text('Contact on WhatsApp'))),
+          const SizedBox(height: 18),
+          Row(children: [
+            Expanded(child: OutlinedButton.icon(onPressed: reportBusiness, icon: const Icon(Icons.flag_outlined, size: 17), label: const Text('Report'))),
+            const SizedBox(width: 9),
+            Expanded(child: TextButton.icon(onPressed: blockBusinessOwner, icon: const Icon(Icons.block_rounded, size: 17), label: const Text('Block owner'), style: TextButton.styleFrom(foregroundColor: const Color(0xFFB33A3A)))),
+          ]),
           const SizedBox(height: 18),
           Row(children: [
             Expanded(child: OutlinedButton.icon(onPressed: reportBusiness, icon: const Icon(Icons.flag_outlined, size: 17), label: const Text('Report'))),
@@ -1338,6 +1397,7 @@ class _AdminConsoleScreenState extends State<AdminConsoleScreen> {
   String? error;
   List<Map<String, dynamic>> companies = [];
   List<Map<String, dynamic>> verifications = [];
+  List<Map<String, dynamic>> reports = [];
   @override void initState() { super.initState(); load(); }
   Future<void> load() async {
     setState(() { loading = true; error = null; });
@@ -1351,10 +1411,12 @@ class _AdminConsoleScreenState extends State<AdminConsoleScreen> {
       final results = await Future.wait([
         supabase.from('companies').select('id,display_name,legal_name,status,created_at').eq('status','pending_review').order('created_at').limit(30),
         supabase.from('verification_cases').select('id,company_id,verification_type,status,reference_value,document_path,submitted_at').inFilter('status',['submitted','in_review']).order('submitted_at').limit(30),
+        supabase.from('content_reports').select('id,target_type,target_id,reason,details,status,created_at').eq('status','open').order('created_at').limit(30),
       ]);
       if (mounted) setState(() {
         companies = List<Map<String, dynamic>>.from(results[0]);
         verifications = List<Map<String, dynamic>>.from(results[1]);
+        reports = List<Map<String, dynamic>>.from(results[2]);
         loading = false;
       });
     } catch (e) { if (mounted) setState(() { error = e.toString().replaceFirst('Exception: ', ''); loading = false; }); }
@@ -1371,6 +1433,16 @@ class _AdminConsoleScreenState extends State<AdminConsoleScreen> {
         'status':status, 'reviewer_id':supabase.auth.currentUser!.id,
         'reviewed_at':DateTime.now().toUtc().toIso8601String(),
       }).eq('id',id);
+      await load();
+    } catch (e) { if (mounted) setState(() => error = e.toString()); }
+  }
+  Future<void> decideReport(String id, String status) async {
+    try {
+      await supabase.from('content_reports').update({
+        'status': status,
+        'reviewer_user_id': supabase.auth.currentUser!.id,
+        'reviewer_note': status == 'resolved' ? 'Reviewed by platform moderation.' : 'Report reviewed and dismissed.',
+      }).eq('id', id);
       await load();
     } catch (e) { if (mounted) setState(() => error = e.toString()); }
   }
@@ -1403,6 +1475,16 @@ class _AdminConsoleScreenState extends State<AdminConsoleScreen> {
             Text((v['verification_type'] ?? 'Business verification').toString().replaceAll('_',' ').toUpperCase(),style:const TextStyle(fontSize:14,fontWeight:FontWeight.w900,color:ink)),
             if (v['reference_value'] != null) Padding(padding:const EdgeInsets.only(top:4),child:Text(v['reference_value'].toString(),style:const TextStyle(color:Color(0xFF71675F),fontSize:12))),
             const SizedBox(height:8),Row(children:[Expanded(child:OutlinedButton(onPressed:()=>decideVerification(v['id'].toString(),'rejected'),child:const Text('Reject'))),const SizedBox(width:8),Expanded(child:FilledButton(onPressed:()=>decideVerification(v['id'].toString(),'verified'),child:const Text('Verify')))]),
+          ]))),
+          const SizedBox(height:14),
+          const Text('CONTENT REPORTS',style:TextStyle(fontSize:12,color:green,fontWeight:FontWeight.w900,letterSpacing:1)),
+          const SizedBox(height:9),
+          if (reports.isEmpty) const Text('No open content reports.',style:TextStyle(color:Color(0xFF71675F))),
+          ...reports.map((r) => Container(margin:const EdgeInsets.only(bottom:9),padding:const EdgeInsets.all(13),decoration:BoxDecoration(color:Colors.white,borderRadius:BorderRadius.circular(16),border:Border.all(color:const Color(0xFFEEE6DE))),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+            Text((r['reason'] ?? 'Report').toString().replaceAll('_',' ').toUpperCase(),style:const TextStyle(fontSize:14,fontWeight:FontWeight.w900,color:ink)),
+            Text('Target: ' + (r['target_type'] ?? 'content').toString() + ' · ' + r['target_id'].toString().substring(0,8),style:const TextStyle(color:Color(0xFF71675F),fontSize:12)),
+            if ((r['details'] ?? '').toString().isNotEmpty) Padding(padding:const EdgeInsets.only(top:5),child:Text(r['details'].toString(),style:const TextStyle(color:Color(0xFF71675F),fontSize:13))),
+            const SizedBox(height:8),Row(children:[Expanded(child:OutlinedButton(onPressed:()=>decideReport(r['id'].toString(),'dismissed'),child:const Text('Dismiss'))),const SizedBox(width:8),Expanded(child:FilledButton(onPressed:()=>decideReport(r['id'].toString(),'resolved'),child:const Text('Resolve')))]),
           ]))),
         ],
       )),
@@ -1569,6 +1651,7 @@ class ProfileScreen extends StatelessWidget {
       const SizedBox(height: 8),
       _ProfileTile(icon: Icons.business_center_outlined, title: 'Business onboarding', subtitle: 'Register a business and manage services', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BusinessOnboardingScreen()))),
       _ProfileTile(icon: Icons.block_rounded, title: 'Blocked accounts', subtitle: 'Manage businesses you have blocked', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BlockedAccountsScreen()))),
+      _ProfileTile(icon: Icons.block_rounded, title: 'Blocked accounts', subtitle: 'Manage businesses you have blocked', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BlockedAccountsScreen()))),
       const SizedBox(height: 8),
       const _AdminAccessTile(),
       const SizedBox(height: 8),
@@ -1601,6 +1684,54 @@ class _ProfileTile extends StatelessWidget {
         const Icon(Icons.chevron_right_rounded, color: Color(0xFF8C8177), size: 19),
       ]),
     )),
+  );
+}
+
+class BlockedAccountsScreen extends StatefulWidget {
+  const BlockedAccountsScreen({super.key});
+  @override State<BlockedAccountsScreen> createState() => _BlockedAccountsScreenState();
+}
+class _BlockedAccountsScreenState extends State<BlockedAccountsScreen> {
+  List<Map<String, dynamic>> rows = [];
+  bool loading = true;
+  String? error;
+  @override void initState() { super.initState(); load(); }
+  Future<void> load() async {
+    try {
+      final data = await supabase.rpc('list_blocked_accounts');
+      if (mounted) setState(() { rows = List<Map<String, dynamic>>.from(data as List); loading = false; error = null; });
+    } catch (_) {
+      if (mounted) setState(() { loading = false; error = 'Blocked accounts could not be loaded.'; });
+    }
+  }
+  Future<void> unblock(String id) async {
+    final user = supabase.auth.currentUser;
+    if (user == null) return;
+    try {
+      await supabase.from('blocked_users').delete().eq('blocker_user_id', user.id).eq('blocked_user_id', id);
+      await load();
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Could not unblock this account.')));
+    }
+  }
+  @override Widget build(BuildContext context) => Scaffold(
+    backgroundColor: canvas,
+    appBar: AppBar(title: const Text('Blocked accounts')),
+    body: loading ? const Center(child: CircularProgressIndicator(color: green))
+      : error != null ? Center(child: Text(error!, style: const TextStyle(color: Color(0xFF71675F))))
+      : rows.isEmpty ? const Center(child: Padding(padding: EdgeInsets.all(28), child: Text('You have not blocked any business owners.', textAlign: TextAlign.center, style: TextStyle(color: Color(0xFF71675F), fontSize: 15))))
+      : ListView(padding: const EdgeInsets.all(18), children: rows.map((row) {
+        final id = row['blocked_user_id'].toString();
+        return Container(margin: const EdgeInsets.only(bottom: 9), padding: const EdgeInsets.all(13), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), border: Border.all(color: const Color(0xFFEEE6DE))), child: Row(children: [
+          const Icon(Icons.block_rounded, color: Color(0xFFB33A3A)),
+          const SizedBox(width: 10),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(row['display_name']?.toString() ?? 'DISCOVERLY member', style: const TextStyle(color: ink, fontWeight: FontWeight.w900)),
+            const Text('Blocked account', style: TextStyle(color: Color(0xFF71675F), fontSize: 12)),
+          ])),
+          TextButton(onPressed: () => unblock(id), child: const Text('Unblock')),
+        ]));
+      }).toList()),
   );
 }
 
