@@ -44,7 +44,7 @@ begin
     raise exception 'Admin or moderator access required';
   end if;
 
-  if jsonb_typeof(p_rows) <> 'array' or jsonb_array_length(p_rows) > 1000 then
+  if coalesce(jsonb_typeof(p_rows), '') <> 'array' or jsonb_array_length(p_rows) > 1000 then
     raise exception 'Provide an array of up to 1000 records per batch';
   end if;
 
@@ -78,10 +78,10 @@ begin
     )), '');
     v_city := nullif(btrim(coalesce(v_item->>'city', '')), '');
     v_state := nullif(btrim(coalesce(v_item->>'state', '')), '');
-    v_country_code := upper(coalesce(
-      nullif(btrim(v_item->>'country_code'), ''),
-      'IN'
-    ));
+    v_country_code := case
+      when upper(coalesce(nullif(btrim(v_item->>'country_code'), ''), 'IN')) = 'IN' then 'IN'
+      else 'ZZ'
+    end;
 
     if v_name is null then
       v_rejected := v_rejected + 1;
