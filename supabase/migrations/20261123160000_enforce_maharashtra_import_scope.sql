@@ -18,7 +18,7 @@ create or replace function private.admin_stage_business_import_rows(p_batch_id u
 returns jsonb
 language plpgsql
 security definer
-set search_path = pg_catalog, public, pg_temp
+set search_path = pg_catalog, pg_temp
 as $function$
 declare
   v_uid uuid := auth.uid();
@@ -199,7 +199,7 @@ create or replace function private.admin_review_business_import(
 returns uuid
 language plpgsql
 security definer
-set search_path = pg_catalog, public, pg_temp
+set search_path = pg_catalog, pg_temp
 as $function$
 declare
   v_uid uuid := auth.uid();
