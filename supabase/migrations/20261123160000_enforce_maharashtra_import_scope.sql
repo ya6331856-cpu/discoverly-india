@@ -232,7 +232,7 @@ begin
   if p_decision = 'reject' then
     update public.business_import_staging
     set status = 'rejected',
-        review_note = p_review_note,
+        review_note = coalesce(p_review_note, review_note),
         reviewed_by = v_uid,
         reviewed_at = now()
     where id = p_staging_id;
