@@ -131,6 +131,7 @@ begin
       batch_id, source_id, external_id, source_record_url, source_record_hash,
       raw_data, business_name, legal_name, city, state, country_code,
       category_name, website_url, public_phone, public_email,
+      normalized_name, normalized_city, duplicate_key,
       duplicate_of_company_id, duplicate_of_staging_id, status, review_note,
       license_snapshot
     )
@@ -153,6 +154,9 @@ begin
       nullif(v_item->>'website_url', ''),
       nullif(v_item->>'public_phone', ''),
       nullif(v_item->>'public_email', ''),
+      regexp_replace(lower(v_name), '[^a-z0-9]+', '', 'g'),
+      regexp_replace(lower(coalesce(v_city, '')), '[^a-z0-9]+', '', 'g'),
+      v_key,
       v_company,
       v_duplicate_staging,
       v_status,
@@ -229,6 +233,10 @@ begin
     raise exception 'Invalid review decision';
   end if;
 
+  if v_item.status = 'imported' then
+    raise exception 'Imported records cannot be changed by review';
+  end if;
+
   if p_decision = 'reject' then
     update public.business_import_staging
     set status = 'rejected',
@@ -245,7 +253,7 @@ begin
     return null;
   end if;
 
-  if v_item.status in ('imported', 'rejected') then
+  if v_item.status = 'rejected' then
     raise exception 'This record cannot be approved or changed in its current state';
   end if;
 
