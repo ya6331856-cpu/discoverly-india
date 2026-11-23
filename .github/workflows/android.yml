@@ -70,6 +70,9 @@ jobs:
         run: |
           if [ -n "$UPLOAD_KEYSTORE_BASE64" ] && [ -n "$UPLOAD_KEYSTORE_PASSWORD" ] && [ -n "$UPLOAD_KEY_ALIAS" ] && [ -n "$UPLOAD_KEY_PASSWORD" ]; then
             echo "$UPLOAD_KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
+            test -s android/app/upload-keystore.jks
+            keytool -list -keystore android/app/upload-keystore.jks -storepass "$UPLOAD_KEYSTORE_PASSWORD" -alias "$UPLOAD_KEY_ALIAS" >/dev/null
+            echo "Upload keystore file and alias verified."
             cat > android/key.properties <<EOF
           storePassword=$UPLOAD_KEYSTORE_PASSWORD
           keyPassword=$UPLOAD_KEY_PASSWORD
