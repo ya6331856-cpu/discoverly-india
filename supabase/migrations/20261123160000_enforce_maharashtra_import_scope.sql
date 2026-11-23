@@ -44,7 +44,11 @@ begin
     raise exception 'Admin or moderator access required';
   end if;
 
-  if coalesce(jsonb_typeof(p_rows), '') <> 'array' or jsonb_array_length(p_rows) > 1000 then
+  if coalesce(jsonb_typeof(p_rows), '') <> 'array' then
+    raise exception 'Provide an array of up to 1000 records per batch';
+  end if;
+
+  if jsonb_array_length(p_rows) > 1000 then
     raise exception 'Provide an array of up to 1000 records per batch';
   end if;
 
