@@ -87,13 +87,15 @@ subprojects {{
         discoverlyAndroidProject.dependencies.add("compileOnly", "androidx.annotation:annotation:1.8.2")
     }}
     discoverlyAndroidProject.plugins.withId("com.android.application") {{
+        // Use the local engine jar only for Kotlin compilation. Flutter's
+        // Gradle plugin already supplies the runtime embedding AAR.
         discoverlyAndroidProject.dependencies.add(
-            "implementation",
+            "compileOnly",
             discoverlyAndroidProject.files(discoverlyFlutterEmbeddingJar)
         )
-        discoverlyAndroidProject.dependencies.add("implementation", "androidx.appcompat:appcompat:1.7.0")
-        discoverlyAndroidProject.dependencies.add("implementation", "androidx.core:core:1.13.1")
-        discoverlyAndroidProject.dependencies.add("implementation", "androidx.annotation:annotation:1.8.2")
+        discoverlyAndroidProject.dependencies.add("compileOnly", "androidx.appcompat:appcompat:1.7.0")
+        discoverlyAndroidProject.dependencies.add("compileOnly", "androidx.core:core:1.13.1")
+        discoverlyAndroidProject.dependencies.add("compileOnly", "androidx.annotation:annotation:1.8.2")
     }}
 }}
 '''
