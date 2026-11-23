@@ -53,7 +53,7 @@ begin
   where id = p_batch_id
   for update;
 
-  if not found or v_batch.created_by <> v_uid then
+  if not found or v_batch.created_by is distinct from v_uid then
     raise exception 'Import batch not found or not owned by current reviewer';
   end if;
 
@@ -225,7 +225,7 @@ begin
   from public.data_sources
   where id = v_item.source_id;
 
-  if p_decision not in ('approve', 'reject', 'duplicate') then
+  if p_decision is null or p_decision not in ('approve', 'reject', 'duplicate') then
     raise exception 'Invalid review decision';
   end if;
 
